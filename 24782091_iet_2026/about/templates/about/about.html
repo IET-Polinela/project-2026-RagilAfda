@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Bandar Lampung</title>
+    <style>
+        /* CSS untuk Gradasi Latar Belakang & Tata Letak Utama (Sama seperti halaman lainnya) */
+        body {
+            margin: 0;
+            min-height: 100vh; /* Memastikan gradasi memenuhi seluruh tinggi layar */
+            background: linear-gradient(to bottom, #8B0000 0%, #000000 100%); /* Gradasi Merah Tua ke Hitam */
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 20px; /* Jarak agar konten tidak menempel ke pinggir */
+        }
+
+        /* Merapikan Link Navigasi */
+        .nav-links {
+            margin-top: 30px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* --- CSS BARU UNTUK HALAMAN ABOUT --- */
+
+        /* Judul Section Baru */
+        h2 {
+            margin-top: 40px;
+            color: #ccc;
+        }
+
+        /* Section Deskripsi Bandar Lampung */
+        .description {
+            max-width: 800px;
+            margin: 20px auto;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        /* Container Pembungkus Shape-Shape Daerah */
+        .region-container {
+            display: flex;
+            flex-wrap: wrap; /* Agar shape bisa turun ke baris baru jika layar sempit */
+            justify-content: center;
+            gap: 20px; /* Jarak antar shape */
+            margin: 30px 0;
+            max-width: 90%;
+        }
+
+        /* Aturan Dasar untuk Setiap Shape Daerah */
+        .region-shape {
+            width: 150px;
+            height: 150px;
+            border-radius: 15px; /* Sedikit melengkung di sudut */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); /* Sedikit bayangan */
+            font-size: 1.1rem;
+        }
+
+        /* --- WAKTU EKSPERIMEN: Buat Warna dan Bentuk untuk Setiap Daerah --- */
+        
+        /* 1. Teluk Betung: Misal, lingkaran dan warna biru laut */
+        .teluk-betung {
+            background-color: #0077be;
+            border-radius: 50%; /* Membuat lingkaran sempurna */
+        }
+
+        /* 2. Kedaton: Misal, kotak oranye cerah */
+        .kedaton {
+            background-color: #ff8c00;
+        }
+
+        /* 3. Sukarame: Misal, kotak hijau daun */
+        .sukarame {
+            background-color: #228b22;
+        }
+
+        /* 4. Kemiling: Misal, lingkaran ungu */
+        .kemiling {
+            background-color: #8a2be2;
+            border-radius: 50%;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h2>Tentang Kota Bandar Lampung 🐘</h2>
+        <p>
+            Bandar Lampung adalah ibu kota dan kota terbesar di provinsi Lampung, Indonesia. 
+            Terletak di ujung selatan pulau Sumatra, kota ini merupakan gerbang utama yang menghubungkan Jawa dan Sumatra. 
+            Terkenal dengan julukan "Kota Gajah", Bandar Lampung memiliki perpaduan unik antara pesona alam pesisir teluk yang indah 
+            dan keramahan budaya Lampung yang kaya.
+        </p>
+    
+    <div class="nav-links">
+        <a href="/">Home</a> |
+        <a href="/about/">About</a> |
+        <a href="/contacts/">Contacts</a>
+    </div>
+
+</body>
+</html>

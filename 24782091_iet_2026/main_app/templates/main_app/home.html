@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome to Home</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh; /* Memastikan gradasi memenuhi seluruh tinggi layar */
+            background: linear-gradient(to bottom, #8B0000, #000000); /* Dark red ke hitam */
+            color: white;
+            font-family: Arial, sans-serif;
+            
+            /* Membuat semua konten tepat di tengah layar */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .nav-links {
+            margin-top: 20px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Selamat Datang di kota Bandar Lampung</h1>
+    <p>website ini dibuat dengan Django</p>
+
+    <div class="nav-links">
+        <a href="/">Home</a> |
+        <a href="/about/">About</a> |
+        <a href="/contacts/">Contacts</a>
+    </div>
+</body>
+</html>
