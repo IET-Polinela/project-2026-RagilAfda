@@ -1,45 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Welcome to Home</title>
-    <style>
-        body {
-            margin: 0;
-            min-height: 100vh; /* Memastikan gradasi memenuhi seluruh tinggi layar */
-            background: linear-gradient(to bottom, #8B0000, #000000); /* Dark red ke hitam */
-            color: white;
-            font-family: Arial, sans-serif;
-            
-            /* Membuat semua konten tepat di tengah layar */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .nav-links {
-            margin-top: 20px;
-        }
-
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            margin: 0 10px;
-        }
-
-        .nav-links a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <title>Home - Smart City</title>
 </head>
 <body>
-    <h1>Selamat Datang di kota Bandar Lampung</h1>
-    <p>website ini dibuat dengan Django</p>
 
-    <div class="nav-links">
-        <a href="/">Home</a> |
+    <h1>Selamat Datang di Kota Bandar Lampung</h1>
+    <p>Website ini dibuat dengan Django</p>
+
+    <nav>
+        <a href="{% url 'home' %}">Home</a> |
         <a href="/about/">About</a> |
         <a href="/contacts/">Contacts</a>
-    </div>
+    </nav>
+
+    <hr>
+
+    <h2>Daftar Laporan Permasalahan Kota</h2>
+    
+    <a href="{% url 'add_report' %}">
+        <button type="button">+ Tambah Laporan Baru</button>
+    </a>
+
+    <br><br>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Judul</th>
+                <th>Kategori</th>
+                <th>Lokasi</th>
+                <th>Status</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td>{{ report.title }}</td>
+                <td>{{ report.category }}</td>
+                <td>{{ report.location }}</td>
+                <td>{{ report.status }}</td>
+                <td>
+                    <a href="#">Edit</a> | 
+                    <a href="#">Hapus</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">Belum ada laporan yang tersedia di database.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
 </body>
 </html>
