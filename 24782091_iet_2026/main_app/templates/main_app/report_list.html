@@ -1,0 +1,24 @@
+<h1>Daftar Laporan</h1>
+
+<a href="{% url 'add_report' %}">+ Tambah Laporan</a>
+<br><br>
+
+<ul>
+    {% for report in reports %}
+        <li>
+            <strong>{{ report.title }}</strong> - {{ report.location }}
+            <br>
+            {{ report.description }}
+
+            <br>
+            <a href="{% url 'update_report' report.pk %}">Edit</a>
+            <a href="{% url 'delete_report' report.pk %}">Delete</a>
+        </li>
+        <hr>
+    {% empty %}
+        <li>Belum ada laporan.</li>
+    {% endfor %}
+</ul>
+
+<br>
+<a href="{% url 'home' %}">Kembali ke Home</a>
