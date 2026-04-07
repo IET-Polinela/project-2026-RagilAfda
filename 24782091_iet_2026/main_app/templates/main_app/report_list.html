@@ -1,24 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Daftar Laporan</title>
+</head>
+<body>
+
 <h1>Daftar Laporan</h1>
 
 <a href="{% url 'add_report' %}">+ Tambah Laporan</a>
 <br><br>
 
 <ul>
-    {% for report in reports %}
-        <li>
-            <strong>{{ report.title }}</strong> - {{ report.location }}
-            <br>
-            {{ report.description }}
+{% for report in reports %}
+    <li>
+        <strong>{{ report.title }}</strong> - {{ report.location }}
+        <p>{{ report.description }}</p>
 
-            <br>
-            <a href="{% url 'update_report' report.pk %}">Edit</a>
-            <a href="{% url 'delete_report' report.pk %}">Delete</a>
-        </li>
-        <hr>
-    {% empty %}
-        <li>Belum ada laporan.</li>
-    {% endfor %}
+        <p>Status: <strong>{{ report.status }}</strong></p>
+
+        <a href="{% url 'update_report' report.pk %}">Edit</a> |
+        <a href="{% url 'delete_report' report.pk %}">Delete</a> |
+        <a href="{% url 'report_detail' report.pk %}">Detail</a>
+
+        <br><br>
+
+        <!-- WORKFLOW -->
+        <form method="POST" action="{% url 'update_status' report.pk %}">
+            {% csrf_token %}
+
+            {% if report.status == 'REPORTED' %}
+                <button name="status" value="VERIFIED">Verifikasi</button>
+
+            {% elif report.status == 'VERIFIED' %}
+                <button name="status" value="IN_PROGRESS">Proses</button>
+
+            {% elif report.status == 'IN_PROGRESS' %}
+                <button name="status" value="RESOLVED">Selesaikan</button>
+
+            {% elif report.status == 'RESOLVED' %}
+                <span>Selesai ✅</span>
+            {% endif %}
+        </form>
+
+    </li>
+    <hr>
+{% empty %}
+    <li>Belum ada laporan.</li>
+{% endfor %}
 </ul>
 
 <br>
 <a href="{% url 'home' %}">Kembali ke Home</a>
+
+</body>
+</html>
