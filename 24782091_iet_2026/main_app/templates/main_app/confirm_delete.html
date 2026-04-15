@@ -1,6 +1,13 @@
-<h2>Yakin mau hapus?</h2>
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3>Yakin ingin menghapus?</h3>
 
 <form method="POST">
     {% csrf_token %}
-    <button type="submit">Ya, hapus</button>
+    <button class="btn btn-danger">Hapus</button>
+    <a href="{% url 'report_list' %}" class="btn btn-secondary">Batal</a>
 </form>
+
+{% endblock %}
