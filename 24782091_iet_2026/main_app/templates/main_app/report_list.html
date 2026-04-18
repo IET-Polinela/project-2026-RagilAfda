@@ -1,6 +1,15 @@
 {% extends 'base.html' %}
 
+{% block title %}Daftar Laporan{% endblock %}
+
 {% block content %}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item active">Reports</li>
+  </ol>
+</nav>
 
 <h2>Daftar Laporan</h2>
 
@@ -25,7 +34,6 @@
             <td>{{ report.title }}</td>
             <td>{{ report.location }}</td>
 
-            <!-- STATUS BADGE -->
             <td>
                 {% if report.status == 'REPORTED' %}
                     <span class="badge bg-secondary">Reported</span>
@@ -40,9 +48,8 @@
 
             <td>
                 <a href="{% url 'update_report' report.pk %}" class="btn btn-warning btn-sm">Edit</a>
-                <a href="{% url 'delete_report' report.pk %}" class="btn btn-danger btn-sm">Hapus</a>
+                <a href="{% url 'delete_report' report.pk %}" class="btn btn-danger btn-sm">Delete</a>
 
-                <!-- WORKFLOW -->
                 <form method="POST" action="{% url 'update_status' report.pk %}" style="display:inline;">
                     {% csrf_token %}
 
@@ -63,11 +70,14 @@
 </table>
 
 {% else %}
-    <!-- EMPTY STATE -->
-    <div class="text-center">
-        <p>Belum ada laporan</p>
-        <a href="{% url 'add_report' %}" class="btn btn-primary">Tambah Laporan</a>
-    </div>
+
+<div class="text-center">
+    <p>Belum ada laporan.</p>
+    <a href="{% url 'add_report' %}" class="btn btn-primary">
+        Tambah Laporan
+    </a>
+</div>
+
 {% endif %}
 
 {% endblock %}

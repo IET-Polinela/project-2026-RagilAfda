@@ -1,13 +1,53 @@
 {% extends 'base.html' %}
 
+{% block title %}Hapus Laporan{% endblock %}
+
 {% block content %}
 
-<h3>Yakin ingin menghapus?</h3>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item"><a href="/reports/">Reports</a></li>
+    <li class="breadcrumb-item active">Delete</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-center align-items-center" style="min-height:70vh;">
+
+<div class="card shadow p-4 text-center" style="width:420px; border-radius:15px;">
+
+<div class="mb-3">
+<div class="mx-auto d-flex justify-content-center align-items-center"
+style="width:80px;height:80px;border:2px solid red;border-radius:50%;font-size:40px;color:red;">
+×
+</div>
+</div>
+
+<h3>Are you sure?</h3>
+
+<p class="text-muted">
+Do you really want to delete this report?<br>
+This process cannot be undone.
+</p>
 
 <form method="POST">
-    {% csrf_token %}
-    <button class="btn btn-danger">Hapus</button>
-    <a href="{% url 'report_list' %}" class="btn btn-secondary">Batal</a>
+{% csrf_token %}
+
+<div class="mt-4 d-flex justify-content-center gap-2">
+
+<a href="{% url 'report_list' %}" class="btn btn-secondary">
+Cancel
+</a>
+
+<button type="submit" class="btn btn-danger">
+Delete
+</button>
+
+</div>
+
 </form>
+
+</div>
+</div>
 
 {% endblock %}

@@ -49,14 +49,23 @@ class ReportUpdateView(UpdateView):
 
 
 #DELETE
+#class ReportDeleteView(DeleteView):
+#    model = Report
+#    template_name = 'main_app/confirm_delete.html'
+#    success_url = reverse_lazy('report_list')
+
+#   def delete(self, request, *args, **kwargs):
+#        messages.success(self.request, "Laporan berhasil dihapus 🗑️")
+#        return super().delete(request, *args, **kwargs)
+
 class ReportDeleteView(DeleteView):
     model = Report
     template_name = 'main_app/confirm_delete.html'
     success_url = reverse_lazy('report_list')
 
-    def delete(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         messages.success(self.request, "Laporan berhasil dihapus 🗑️")
-        return super().delete(request, *args, **kwargs)
+        return super().post(request, *args, **kwargs)
 
 
 #WORKFLOW STATUS

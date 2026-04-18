@@ -1,19 +1,46 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Smart City</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-    <h1>Selamat Datang di Kota Bandar Lampung</h1>
-    <p>Website ini dibuat dengan Django</p>
+{% block title %}Home{% endblock %}
 
-    <nav>
-        <a href="{% url 'home' %}">Home</a> |
-        <a href="/about/">About</a> |
-        <a href="/contacts/">Contacts</a>
-        <a href="{% url 'report_list' %}">Daftar Laporan</a>
-    </nav>
+{% block content %}
 
-</body>
-</html>
+<!-- BREADCRUMB -->
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item active">Home</li>
+  </ol>
+</nav>
+
+<!-- CONTENT -->
+<div class="text-center mt-5">
+
+    <h1 class="mb-3">Selamat Datang di Kota Bandar Lampung</h1>
+
+    <p class="text-muted mb-4">
+        Website ini dibuat dengan Django
+    </p>
+
+    <!-- MENU BUTTON -->
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+
+        <a href="{% url 'home' %}" class="btn btn-primary">
+            Home
+        </a>
+
+        <a href="/about/" class="btn btn-info text-white">
+            About
+        </a>
+
+        <a href="/contacts/" class="btn btn-secondary">
+            Contacts
+        </a>
+
+        <a href="{% url 'report_list' %}" class="btn btn-success">
+            Daftar Laporan
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

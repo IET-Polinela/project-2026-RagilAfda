@@ -2,9 +2,9 @@
 
 {% block content %}
 
-<h2>Tambah Laporan</h2>
+<h2>Form Laporan</h2>
 
-<form method="POST">
+<form method="POST" id="reportForm">
     {% csrf_token %}
 
     {{ form.as_p }}
@@ -13,12 +13,22 @@
         Submit
     </button>
 
-    <a href="{% url 'report_list' %}" class="btn btn-secondary">Kembali</a>
+    <a href="{% url 'report_list' %}" class="btn btn-secondary">
+        Kembali
+    </a>
 </form>
 
 <script>
-document.querySelector("form").addEventListener("submit", function(){
-    document.getElementById("submitBtn").innerText = "Loading...";
+document.getElementById("reportForm").addEventListener("submit", function() {
+
+    let btn = document.getElementById("submitBtn");
+
+    btn.disabled = true;
+
+    btn.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-2"></span>
+        Loading...
+    `;
 });
 </script>
 
