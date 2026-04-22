@@ -18,12 +18,42 @@
 
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ms-auto">
+
                 <li class="nav-item">
                     <a class="nav-link" href="/">Home</a>
                 </li>
+
                 <li class="nav-item">
                     <a class="nav-link" href="/reports/">Reports</a>
                 </li>
+
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <span class="nav-link text-white">
+                            Halo, {{ user.username }}
+                        </span>
+                    </li>
+
+                    <!-- ✅ FIX LOGOUT (POST METHOD) -->
+                    <li class="nav-item">
+                        <form action="{% url 'logout' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-link btn btn-link text-white" style="border:none;">
+                                Logout
+                            </button>
+                        </form>
+                    </li>
+
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}">Register</a>
+                    </li>
+                {% endif %}
+
             </ul>
         </div>
     </div>

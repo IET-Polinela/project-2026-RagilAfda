@@ -40,7 +40,11 @@ INSTALLED_APPS = [
     'main_app',
     'about',
     'contacts',
+    'usermanagement_24782091',
 ]
+
+AUTH_USER_MODEL = 'usermanagement_24782091.CustomUser'
+LOGIN_REDIRECT_URL = '/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

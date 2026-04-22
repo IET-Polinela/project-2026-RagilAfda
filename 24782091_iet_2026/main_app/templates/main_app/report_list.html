@@ -2,20 +2,32 @@
 
 {% block title %}Daftar Laporan{% endblock %}
 
-{% block content %}
-
+{% block breadcrumb %}
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="/">Home</a></li>
     <li class="breadcrumb-item active">Reports</li>
   </ol>
 </nav>
+{% endblock %}
+
+{% block content %}
 
 <h2>Daftar Laporan</h2>
 
-<a href="{% url 'add_report' %}" class="btn btn-primary mb-3">
-    + Tambah Laporan
-</a>
+<!-- CREATE -->
+{% if user.is_authenticated %}
+    {% if user.is_admin %}
+        <a href="{% url 'add_report' %}" class="btn btn-primary mb-3">
+            + Tambah Laporan
+        </a>
+    {% else %}
+        <button class="btn btn-secondary mb-3"
+                onclick="alert('Akses dibatasi! Hanya admin ❌')">
+            + Tambah Laporan
+        </button>
+    {% endif %}
+{% endif %}
 
 {% if reports %}
 <table class="table table-bordered">
@@ -47,22 +59,78 @@
             </td>
 
             <td>
-                <a href="{% url 'update_report' report.pk %}" class="btn btn-warning btn-sm">Edit</a>
-                <a href="{% url 'delete_report' report.pk %}" class="btn btn-danger btn-sm">Delete</a>
 
-                <form method="POST" action="{% url 'update_status' report.pk %}" style="display:inline;">
-                    {% csrf_token %}
+                <!-- DETAIL -->
+                <a href="{% url 'report_detail' report.pk %}"
+                   class="btn btn-info btn-sm">
+                   Detail
+                </a>
 
-                    {% if report.status == 'REPORTED' %}
-                        <button class="btn btn-primary btn-sm" name="status" value="VERIFIED">Verifikasi</button>
+                {% if user.is_admin %}
 
-                    {% elif report.status == 'VERIFIED' %}
-                        <button class="btn btn-info btn-sm" name="status" value="IN_PROGRESS">Proses</button>
+                    <!-- EDIT -->
+                    <a href="{% url 'update_report' report.pk %}"
+                       class="btn btn-warning btn-sm">
+                       Edit
+                    </a>
 
-                    {% elif report.status == 'IN_PROGRESS' %}
-                        <button class="btn btn-success btn-sm" name="status" value="RESOLVED">Selesai</button>
-                    {% endif %}
-                </form>
+                    <!-- DELETE -->
+                    <a href="{% url 'delete_report' report.pk %}"
+                       class="btn btn-danger btn-sm">
+                       Delete
+                    </a>
+
+                    <!-- STATUS -->
+                    <form method="POST"
+                          action="{% url 'update_status' report.pk %}"
+                          style="display:inline;">
+                        {% csrf_token %}
+
+                        {% if report.status == 'REPORTED' %}
+                            <button class="btn btn-primary btn-sm"
+                                    name="status"
+                                    value="VERIFIED">
+                                Verifikasi
+                            </button>
+
+                        {% elif report.status == 'VERIFIED' %}
+                            <button class="btn btn-info btn-sm"
+                                    name="status"
+                                    value="IN_PROGRESS">
+                                Proses
+                            </button>
+
+                        {% elif report.status == 'IN_PROGRESS' %}
+                            <button class="btn btn-success btn-sm"
+                                    name="status"
+                                    value="RESOLVED">
+                                Selesai
+                            </button>
+                        {% endif %}
+                    </form>
+
+                {% else %}
+
+                    <!-- EDIT (FAKE) -->
+                    <button class="btn btn-secondary btn-sm"
+                            onclick="alert('Akses dibatasi! ❌')">
+                        Edit
+                    </button>
+
+                    <!-- DELETE (FAKE) -->
+                    <button class="btn btn-secondary btn-sm"
+                            onclick="alert('Akses dibatasi! ❌')">
+                        Delete
+                    </button>
+
+                    <!-- STATUS (FAKE) -->
+                    <button class="btn btn-secondary btn-sm"
+                            onclick="alert('Akses dibatasi! ❌')">
+                        Verifikasi
+                    </button>
+
+                {% endif %}
+
             </td>
         </tr>
     {% endfor %}
@@ -70,14 +138,7 @@
 </table>
 
 {% else %}
-
-<div class="text-center">
-    <p>Belum ada laporan.</p>
-    <a href="{% url 'add_report' %}" class="btn btn-primary">
-        Tambah Laporan
-    </a>
-</div>
-
+<p>Belum ada laporan.</p>
 {% endif %}
 
 {% endblock %}
