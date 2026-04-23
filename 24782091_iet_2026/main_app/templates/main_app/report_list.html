@@ -15,17 +15,15 @@
 
 <h2>Daftar Laporan</h2>
 
-<!-- CREATE -->
 {% if user.is_authenticated %}
     {% if user.is_admin %}
         <a href="{% url 'add_report' %}" class="btn btn-primary mb-3">
             + Tambah Laporan
         </a>
     {% else %}
-        <button class="btn btn-secondary mb-3"
-                onclick="alert('Akses dibatasi! Hanya admin ❌')">
+        <a href="{% url 'add_report' %}" class="btn btn-secondary mb-3">
             + Tambah Laporan
-        </button>
+        </a>
     {% endif %}
 {% endif %}
 
@@ -59,28 +57,22 @@
             </td>
 
             <td>
-
-                <!-- DETAIL -->
                 <a href="{% url 'report_detail' report.pk %}"
                    class="btn btn-info btn-sm">
                    Detail
                 </a>
 
                 {% if user.is_admin %}
-
-                    <!-- EDIT -->
                     <a href="{% url 'update_report' report.pk %}"
                        class="btn btn-warning btn-sm">
                        Edit
                     </a>
 
-                    <!-- DELETE -->
                     <a href="{% url 'delete_report' report.pk %}"
                        class="btn btn-danger btn-sm">
                        Delete
                     </a>
 
-                    <!-- STATUS -->
                     <form method="POST"
                           action="{% url 'update_status' report.pk %}"
                           style="display:inline;">
@@ -92,14 +84,12 @@
                                     value="VERIFIED">
                                 Verifikasi
                             </button>
-
                         {% elif report.status == 'VERIFIED' %}
                             <button class="btn btn-info btn-sm"
                                     name="status"
                                     value="IN_PROGRESS">
                                 Proses
                             </button>
-
                         {% elif report.status == 'IN_PROGRESS' %}
                             <button class="btn btn-success btn-sm"
                                     name="status"
@@ -108,29 +98,42 @@
                             </button>
                         {% endif %}
                     </form>
-
                 {% else %}
-
-                    <!-- EDIT (FAKE) -->
-                    <button class="btn btn-secondary btn-sm"
-                            onclick="alert('Akses dibatasi! ❌')">
+                    <a href="{% url 'update_report' report.pk %}"
+                       class="btn btn-secondary btn-sm">
                         Edit
-                    </button>
+                    </a>
 
-                    <!-- DELETE (FAKE) -->
-                    <button class="btn btn-secondary btn-sm"
-                            onclick="alert('Akses dibatasi! ❌')">
+                    <a href="{% url 'delete_report' report.pk %}"
+                       class="btn btn-secondary btn-sm">
                         Delete
-                    </button>
+                    </a>
 
-                    <!-- STATUS (FAKE) -->
-                    <button class="btn btn-secondary btn-sm"
-                            onclick="alert('Akses dibatasi! ❌')">
-                        Verifikasi
-                    </button>
-
+                    <form method="POST"
+                          action="{% url 'update_status' report.pk %}"
+                          style="display:inline;">
+                        {% csrf_token %}
+                        {% if report.status == 'REPORTED' %}
+                            <button class="btn btn-secondary btn-sm"
+                                    name="status"
+                                    value="VERIFIED">
+                                Verifikasi
+                            </button>
+                        {% elif report.status == 'VERIFIED' %}
+                            <button class="btn btn-secondary btn-sm"
+                                    name="status"
+                                    value="IN_PROGRESS">
+                                Proses
+                            </button>
+                        {% elif report.status == 'IN_PROGRESS' %}
+                            <button class="btn btn-secondary btn-sm"
+                                    name="status"
+                                    value="RESOLVED">
+                                Selesai
+                            </button>
+                        {% endif %}
+                    </form>
                 {% endif %}
-
             </td>
         </tr>
     {% endfor %}

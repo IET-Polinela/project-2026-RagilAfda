@@ -63,7 +63,7 @@
 <div class="container mt-3">
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-success alert-dismissible fade show">
+            <div class="alert {% if 'success' in message.tags %}alert-success{% elif 'error' in message.tags or 'warning' in message.tags %}alert-danger{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
                 {{ message }}
                 <button class="btn-close" data-bs-dismiss="alert"></button>
             </div>
