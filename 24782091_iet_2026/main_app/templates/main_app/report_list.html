@@ -2,146 +2,107 @@
 
 {% block title %}Daftar Laporan{% endblock %}
 
-{% block breadcrumb %}
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/">Home</a></li>
-    <li class="breadcrumb-item active">Reports</li>
-  </ol>
-</nav>
-{% endblock %}
-
 {% block content %}
+<div class="page-shell">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active">Reports</li>
+      </ol>
+    </nav>
 
-<h2>Daftar Laporan</h2>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="section-title mb-2">Daftar Laporan</h2>
+            <p class="section-subtitle mb-0">Kelola dan pantau laporan kota dalam satu tampilan yang lebih fokus dan nyaman dibaca.</p>
+        </div>
 
-{% if user.is_authenticated %}
-    {% if user.is_admin %}
-        <a href="{% url 'add_report' %}" class="btn btn-primary mb-3">
-            + Tambah Laporan
-        </a>
+        {% if user.is_authenticated %}
+            {% if user.is_admin %}
+                <a href="{% url 'add_report' %}" class="btn btn-primary"><i class="bi bi-plus-circle-fill"></i>Tambah Laporan</a>
+            {% else %}
+                <a href="{% url 'add_report' %}" class="btn btn-secondary"><i class="bi bi-lock-fill"></i>Tambah Laporan</a>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {% if reports %}
+    <div class="list-panel">
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Judul</th>
+                    <th>Lokasi</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for report in reports %}
+                <tr>
+                    <td>{{ report.title }}</td>
+                    <td>{{ report.location }}</td>
+                    <td>
+                        {% if report.status == 'REPORTED' %}
+                            <span class="badge bg-secondary">Reported</span>
+                        {% elif report.status == 'VERIFIED' %}
+                            <span class="badge bg-primary">Verified</span>
+                        {% elif report.status == 'IN_PROGRESS' %}
+                            <span class="badge bg-warning">In Progress</span>
+                        {% elif report.status == 'RESOLVED' %}
+                            <span class="badge bg-success">Resolved</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'report_detail' report.pk %}" class="btn btn-info btn-sm"><i class="bi bi-eye-fill"></i>Detail</a>
+
+                        {% if user.is_admin %}
+                            <a href="{% url 'update_report' report.pk %}" class="btn btn-warning btn-sm"><i class="bi bi-pencil-square"></i>Edit</a>
+                            <a href="{% url 'delete_report' report.pk %}" class="btn btn-danger btn-sm"><i class="bi bi-trash3-fill"></i>Delete</a>
+
+                            <form method="POST" action="{% url 'update_status' report.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                {% if report.status == 'REPORTED' %}
+                                    <button class="btn btn-primary btn-sm" name="status" value="VERIFIED"><i class="bi bi-patch-check-fill"></i>Verifikasi</button>
+                                {% elif report.status == 'VERIFIED' %}
+                                    <button class="btn btn-info btn-sm" name="status" value="IN_PROGRESS"><i class="bi bi-gear-fill"></i>Proses</button>
+                                {% elif report.status == 'IN_PROGRESS' %}
+                                    <button class="btn btn-success btn-sm" name="status" value="RESOLVED"><i class="bi bi-check2-circle"></i>Selesai</button>
+                                {% endif %}
+                            </form>
+                        {% else %}
+                            <a href="{% url 'update_report' report.pk %}" class="btn btn-secondary btn-sm"><i class="bi bi-lock-fill"></i>Edit</a>
+                            <a href="{% url 'delete_report' report.pk %}" class="btn btn-secondary btn-sm"><i class="bi bi-lock-fill"></i>Delete</a>
+
+                            <form method="POST" action="{% url 'update_status' report.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                {% if report.status == 'REPORTED' %}
+                                    <button class="btn btn-secondary btn-sm" name="status" value="VERIFIED"><i class="bi bi-lock-fill"></i>Verifikasi</button>
+                                {% elif report.status == 'VERIFIED' %}
+                                    <button class="btn btn-secondary btn-sm" name="status" value="IN_PROGRESS"><i class="bi bi-lock-fill"></i>Proses</button>
+                                {% elif report.status == 'IN_PROGRESS' %}
+                                    <button class="btn btn-secondary btn-sm" name="status" value="RESOLVED"><i class="bi bi-lock-fill"></i>Selesai</button>
+                                {% endif %}
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
-        <a href="{% url 'add_report' %}" class="btn btn-secondary mb-3">
-            + Tambah Laporan
-        </a>
+    <div class="card p-4 empty-state">
+        <i class="bi bi-inbox-fill"></i>
+        <h4 class="section-title mb-2">Belum Ada Laporan</h4>
+        <p class="text-muted mb-3">
+            Saat ini data laporan masih kosong. Halaman ini nantinya akan menampilkan daftar laporan beserta lokasi,
+            status penanganan, dan aksi yang tersedia sesuai hak akses pengguna.
+        </p>
+        <p class="text-muted mb-0">
+            Admin dapat mulai mengisi data melalui tombol tambah laporan agar halaman ini segera terisi dengan informasi yang relevan.
+        </p>
+    </div>
     {% endif %}
-{% endif %}
-
-{% if reports %}
-<table class="table table-bordered">
-    <thead class="table-dark">
-        <tr>
-            <th>Judul</th>
-            <th>Lokasi</th>
-            <th>Status</th>
-            <th>Aksi</th>
-        </tr>
-    </thead>
-
-    <tbody>
-    {% for report in reports %}
-        <tr>
-            <td>{{ report.title }}</td>
-            <td>{{ report.location }}</td>
-
-            <td>
-                {% if report.status == 'REPORTED' %}
-                    <span class="badge bg-secondary">Reported</span>
-                {% elif report.status == 'VERIFIED' %}
-                    <span class="badge bg-primary">Verified</span>
-                {% elif report.status == 'IN_PROGRESS' %}
-                    <span class="badge bg-warning">In Progress</span>
-                {% elif report.status == 'RESOLVED' %}
-                    <span class="badge bg-success">Resolved</span>
-                {% endif %}
-            </td>
-
-            <td>
-                <a href="{% url 'report_detail' report.pk %}"
-                   class="btn btn-info btn-sm">
-                   Detail
-                </a>
-
-                {% if user.is_admin %}
-                    <a href="{% url 'update_report' report.pk %}"
-                       class="btn btn-warning btn-sm">
-                       Edit
-                    </a>
-
-                    <a href="{% url 'delete_report' report.pk %}"
-                       class="btn btn-danger btn-sm">
-                       Delete
-                    </a>
-
-                    <form method="POST"
-                          action="{% url 'update_status' report.pk %}"
-                          style="display:inline;">
-                        {% csrf_token %}
-
-                        {% if report.status == 'REPORTED' %}
-                            <button class="btn btn-primary btn-sm"
-                                    name="status"
-                                    value="VERIFIED">
-                                Verifikasi
-                            </button>
-                        {% elif report.status == 'VERIFIED' %}
-                            <button class="btn btn-info btn-sm"
-                                    name="status"
-                                    value="IN_PROGRESS">
-                                Proses
-                            </button>
-                        {% elif report.status == 'IN_PROGRESS' %}
-                            <button class="btn btn-success btn-sm"
-                                    name="status"
-                                    value="RESOLVED">
-                                Selesai
-                            </button>
-                        {% endif %}
-                    </form>
-                {% else %}
-                    <a href="{% url 'update_report' report.pk %}"
-                       class="btn btn-secondary btn-sm">
-                        Edit
-                    </a>
-
-                    <a href="{% url 'delete_report' report.pk %}"
-                       class="btn btn-secondary btn-sm">
-                        Delete
-                    </a>
-
-                    <form method="POST"
-                          action="{% url 'update_status' report.pk %}"
-                          style="display:inline;">
-                        {% csrf_token %}
-                        {% if report.status == 'REPORTED' %}
-                            <button class="btn btn-secondary btn-sm"
-                                    name="status"
-                                    value="VERIFIED">
-                                Verifikasi
-                            </button>
-                        {% elif report.status == 'VERIFIED' %}
-                            <button class="btn btn-secondary btn-sm"
-                                    name="status"
-                                    value="IN_PROGRESS">
-                                Proses
-                            </button>
-                        {% elif report.status == 'IN_PROGRESS' %}
-                            <button class="btn btn-secondary btn-sm"
-                                    name="status"
-                                    value="RESOLVED">
-                                Selesai
-                            </button>
-                        {% endif %}
-                    </form>
-                {% endif %}
-            </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-
-{% else %}
-<p>Belum ada laporan.</p>
-{% endif %}
-
+</div>
 {% endblock %}

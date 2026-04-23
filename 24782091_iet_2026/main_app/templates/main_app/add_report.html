@@ -1,35 +1,37 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="page-shell">
+    <h2 class="section-title">Form Laporan</h2>
+    <p class="section-subtitle">Lengkapi data laporan dengan tampilan form yang lebih rapi dan tetap memakai alur yang sama.</p>
 
-<h2>Form Laporan</h2>
+    <div class="card p-4 mt-4">
+        <form method="POST" id="reportForm">
+            {% csrf_token %}
 
-<form method="POST" id="reportForm">
-    {% csrf_token %}
+            {{ form.as_p }}
 
-    {{ form.as_p }}
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="submit" class="btn btn-success" id="submitBtn">
+                    <i class="bi bi-send-fill"></i>Submit
+                </button>
 
-    <button type="submit" class="btn btn-success" id="submitBtn">
-        Submit
-    </button>
-
-    <a href="{% url 'report_list' %}" class="btn btn-secondary">
-        Kembali
-    </a>
-</form>
+                <a href="{% url 'report_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left-circle-fill"></i>Kembali
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
 document.getElementById("reportForm").addEventListener("submit", function() {
-
     let btn = document.getElementById("submitBtn");
-
     btn.disabled = true;
-
     btn.innerHTML = `
         <span class="spinner-border spinner-border-sm me-2"></span>
         Loading...
     `;
 });
 </script>
-
 {% endblock %}

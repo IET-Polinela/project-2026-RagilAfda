@@ -1,21 +1,66 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Contacts</title>
-       
-</head>
-<body>
+{% extends 'base.html' %}
 
-    <h1>Contacts Page</h1>
-    <p>Ini adalah halaman kontak.</p>
-    <p>Email: ragilafda@gmail.com</p>
-    <p>Phone: 08123456789</p>
+{% block title %}Contacts{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active">Contacts</li>
+      </ol>
+    </nav>
+
+    <div class="card p-4">
+        <h1 class="section-title">Contacts Page</h1>
+        <p class="section-subtitle">
+            Halaman ini memuat informasi kontak yang dapat digunakan untuk kebutuhan komunikasi, pertanyaan,
+            maupun tindak lanjut terkait pengelolaan portal dan layanan laporan.
+        </p>
     </div>
 
-        <a href="/">Home</a> |
-        <a href="/about/">About</a> |
-        <a href="/contacts/">Contacts</a>
-    </div>
+    <div class="section-grid mt-4">
+        <div class="span-6">
+            <div class="content-card">
+                <h4>Informasi Kontak</h4>
+                <ul class="info-list">
+                    <li>
+                        <i class="bi bi-envelope-fill"></i>
+                        <div>
+                            <strong>Email</strong><br>
+                            ragilafda@gmail.com
+                        </div>
+                    </li>
+                    <li>
+                        <i class="bi bi-telephone-fill"></i>
+                        <div>
+                            <strong>Phone</strong><br>
+                            08123456789
+                        </div>
+                    </li>
+                    <li>
+                        <i class="bi bi-clock-fill"></i>
+                        <div>
+                            <strong>Jam Layanan</strong><br>
+                            Senin - Jumat, 08.00 - 16.00 WIB
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
 
-</body>
-</html>
+        <div class="span-6">
+            <div class="content-card">
+                <h4>Catatan Penggunaan</h4>
+                <p>
+                    Untuk kebutuhan teknis, pertanyaan fitur, atau klarifikasi laporan,
+                    pengguna dapat menghubungi kontak yang tersedia dengan menyertakan informasi singkat dan jelas.
+                </p>
+                <p class="mb-0">
+                    Penyampaian pesan yang rapi akan membantu proses tindak lanjut menjadi lebih cepat dan terarah.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

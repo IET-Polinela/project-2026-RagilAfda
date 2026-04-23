@@ -1,22 +1,59 @@
-<!DOCTYPE html>
-<html>
-<body>
-<head>
-    <title>About - Bandar Lampung</title>
+{% extends 'base.html' %}
 
-    <h2>Tentang Kota Bandar Lampung 🐘</h2>
-        <p>
-            Bandar Lampung adalah ibu kota dan kota terbesar di provinsi Lampung, Indonesia. 
-            Terletak di ujung selatan pulau Sumatra, kota ini merupakan gerbang utama yang menghubungkan Jawa dan Sumatra. 
-            Terkenal dengan julukan "Kota Gajah", Bandar Lampung memiliki perpaduan unik antara pesona alam pesisir teluk yang indah 
-            dan keramahan budaya Lampung yang kaya.
+{% block title %}About - Bandar Lampung{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active">About</li>
+      </ol>
+    </nav>
+
+    <div class="card p-4">
+        <h2 class="section-title">Tentang Kota Bandar Lampung</h2>
+        <p class="section-subtitle">
+            Bandar Lampung adalah ibu kota dan kota terbesar di provinsi Lampung, Indonesia.
+            Terletak di ujung selatan Pulau Sumatra, kota ini menjadi gerbang utama yang menghubungkan Jawa dan Sumatra.
+            Bandar Lampung dikenal sebagai "Kota Gajah" dengan perpaduan pesona alam pesisir dan budaya Lampung yang kaya.
         </p>
-    
-    <div class="nav-links">
-        <a href="/">Home</a> |
-        <a href="/about/">About</a> |
-        <a href="/contacts/">Contacts</a>
     </div>
 
-</body>
-</html>
+    <div class="section-grid mt-4">
+        <div class="span-7">
+            <div class="content-card">
+                <h4>Peran Kota</h4>
+                <p>
+                    Bandar Lampung memiliki posisi yang strategis sebagai pusat mobilitas, perdagangan, pendidikan, dan pelayanan.
+                    Aktivitas kota yang padat membuat kebutuhan akan informasi publik dan sistem pelaporan menjadi sangat penting.
+                </p>
+                <p class="mb-0">
+                    Melalui portal ini, gambaran tentang layanan kota tidak hanya tampil sebagai data,
+                    tetapi juga sebagai upaya membangun komunikasi yang lebih baik antara masyarakat dan pengelola wilayah.
+                </p>
+            </div>
+        </div>
+
+        <div class="span-5">
+            <div class="content-card">
+                <h4>Nilai Utama</h4>
+                <ul class="feature-list">
+                    <li>
+                        <i class="bi bi-building-fill-check"></i>
+                        <div>Pelayanan publik yang lebih tertib dan mudah dipantau.</div>
+                    </li>
+                    <li>
+                        <i class="bi bi-chat-square-text-fill"></i>
+                        <div>Penyampaian informasi yang jelas dan mudah dipahami warga.</div>
+                    </li>
+                    <li>
+                        <i class="bi bi-stars"></i>
+                        <div>Tampilan modern yang mendukung pengalaman penggunaan yang nyaman.</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
