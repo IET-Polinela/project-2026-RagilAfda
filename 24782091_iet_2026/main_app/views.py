@@ -3,9 +3,27 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.http import JsonResponse
 
 from .models import Report
 
+
+def search_report(request):
+    query = request.GET.get('q')
+
+    reports = Report.objects.filter(title__icontains=query).values()
+
+    return JsonResponse(list(reports), safe=False)
+
+def report_detail_api(request, pk):
+    report = get_object_or_404(Report, pk=pk)
+
+    return JsonResponse({
+        'title': report.title,
+        'description': report.description,
+        'location': report.location,
+        'status': report.status
+    })
 
 def home(request):
     return render(request, 'main_app/home.html')
