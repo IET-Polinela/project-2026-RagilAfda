@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .dashboard-card {
+        background: linear-gradient(180deg, rgba(47, 60, 88, 0.96), rgba(38, 49, 73, 0.96));
+        border: 1px solid rgba(150, 166, 194, 0.14);
+        border-radius: 20px;
+        box-shadow: 0 18px 34px rgba(10, 16, 28, 0.18);
+    }
+
+    .dashboard-title {
+        color: #e7edf8;
+    }
+
+    .dashboard-subtitle {
+        color: #b5c0d4;
+    }
+
+    .dashboard-button {
+        background: #7f4c67;
+        border-color: #93607a;
+        color: #f7eef3;
+    }
+
+    .dashboard-button:hover {
+        background: #71445c;
+        border-color: #87556f;
+        color: #fff7fa;
+    }
+
+    .dashboard-table-wrap {
+        border: 1px solid rgba(160, 175, 201, 0.14);
+        border-radius: 16px;
+        overflow: hidden;
+        background: rgba(75, 89, 118, 0.24);
+        box-shadow: 0 10px 24px rgba(7, 12, 24, 0.12);
+    }
+
+    .dashboard-table {
+        margin-bottom: 0;
+        color: #dce5f4;
+    }
+
+    .dashboard-table thead th {
+        background: rgba(31, 40, 61, 0.9);
+        color: #eef4ff;
+        border-bottom: 1px solid rgba(160, 175, 201, 0.16);
+        font-weight: 600;
+    }
+
+    .dashboard-table td {
+        background: rgba(75, 89, 118, 0.18);
+        border-color: rgba(160, 175, 201, 0.12);
+        color: #d5deed;
+        vertical-align: middle;
+    }
+
+    .dashboard-table tbody tr:hover td {
+        background: rgba(104, 120, 150, 0.22);
+    }
+
+    .table-empty {
+        color: #b5c0d4;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .status-pill {
+        border-radius: 999px;
+        padding: 0.45rem 0.8rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+
+    .status-reported {
+        background: #4d6288;
+        color: #eef4ff;
+    }
+
+    .status-verified {
+        background: #4a7881;
+        color: #edf9fb;
+    }
+
+    .status-progress {
+        background: #8d7441;
+        color: #fff8e8;
+    }
+
+    .status-resolved {
+        background: #557860;
+        color: #f1fbf3;
+    }
+
+</style>
+
+<div class="page-shell">
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active">Dashboard</li>
+      </ol>
+    </nav>
+
+    <h2 class="mb-4">Dashboard</h2>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-lg-5">
+            <div class="content-card dashboard-card h-100">
+                <h4 class="mb-3 dashboard-title">Status Laporan</h4>
+                <div style="max-width: 320px; margin: 0 auto;">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-7">
+            <div class="content-card dashboard-card h-100">
+                <h4 class="mb-3 dashboard-title">Kategori Laporan</h4>
+                <div style="height: 280px;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-card dashboard-card">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h4 class="mb-1 dashboard-title">Laporan Terbaru</h4>
+                <p class="section-subtitle dashboard-subtitle mb-0">Menampilkan 5 laporan terbaru untuk status reported dan resolved.</p>
+            </div>
+            <a href="{% url 'report_list' %}" class="btn dashboard-button">
+                <i class="bi bi-list-ul"></i>View All
+            </a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-xl-6">
+                <h5 class="dashboard-title mb-3">5 Latest Reported</h5>
+                <div class="dashboard-table-wrap">
+                    <table class="table dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Judul</th>
+                                <th>Lokasi</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="latestReportedTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-6">
+                <h5 class="dashboard-title mb-3">5 Latest Resolved</h5>
+                <div class="dashboard-table-wrap">
+                    <table class="table dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Judul</th>
+                                <th>Lokasi</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="latestResolvedTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+function getBadgeClass(status) {
+    if (status === "REPORTED") return "status-pill status-reported";
+    if (status === "VERIFIED") return "status-pill status-verified";
+    if (status === "IN_PROGRESS") return "status-pill status-progress";
+    if (status === "RESOLVED") return "status-pill status-resolved";
+    return "status-pill status-reported";
+}
+
+function renderTableRows(items) {
+    if (!items.length) {
+        return '<tr><td colspan="3" class="table-empty">Belum ada laporan untuk ditampilkan.</td></tr>';
+    }
+
+    return items.map(item => `
+        <tr>
+            <td>${item.title}</td>
+            <td>${item.location}</td>
+            <td><span class="${getBadgeClass(item.status)}">${item.status}</span></td>
+        </tr>
+    `).join("");
+}
+
+fetch('/dashboard/data/')
+.then(response => response.json())
+.then(data => {
+    const statusLabels = data.status_data.map(item => item.status);
+    const statusValues = data.status_data.map(item => item.total);
+
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: statusLabels,
+            datasets: [{
+                data: statusValues,
+                backgroundColor: ['#7089ad', '#6fa6af', '#c3a160', '#7ca18a'],
+                borderColor: '#2b3852',
+                borderWidth: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#c9d4e6'
+                    }
+                }
+            }
+        }
+    });
+
+    const categoryLabels = data.category_data.map(item => item.category);
+    const categoryValues = data.category_data.map(item => item.total);
+
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'bar',
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                data: categoryValues,
+                backgroundColor: '#728caf',
+                borderRadius: 10,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#c5d0e0'
+                    },
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#c5d0e0'
+                    },
+                    grid: {
+                        color: 'rgba(181, 192, 212, 0.16)'
+                    }
+                }
+            }
+        }
+    });
+
+    document.getElementById('latestReportedTable').innerHTML = renderTableRows(data.latest_reported);
+    document.getElementById('latestResolvedTable').innerHTML = renderTableRows(data.latest_resolved);
+});
+</script>
+
+{% endblock %}
