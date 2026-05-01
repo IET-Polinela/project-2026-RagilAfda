@@ -9,7 +9,7 @@ from .models import Report
 
 
 def search_report(request):
-    query = request.GET.get('q')
+    query = request.GET.get('q', '')
 
     reports = Report.objects.filter(title__icontains=query).values()
 

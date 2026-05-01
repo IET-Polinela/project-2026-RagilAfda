@@ -12,6 +12,7 @@ class DashboardView(TemplateView):
 
 class DashboardDataView(View):
     def get(self, request, *args, **kwargs):
+        total_reports = Report.objects.count()
         status_data = Report.objects.values('status').annotate(total=Count('id'))
         category_data = Report.objects.values('category').annotate(total=Count('id'))
         latest_reported = list(
@@ -22,6 +23,7 @@ class DashboardDataView(View):
         )
 
         return JsonResponse({
+            'total_reports': total_reports,
             'status_data': list(status_data),
             'category_data': list(category_data),
             'latest_reported': latest_reported,

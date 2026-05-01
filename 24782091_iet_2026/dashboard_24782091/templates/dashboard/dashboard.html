@@ -94,6 +94,28 @@
         color: #f1fbf3;
     }
 
+    .summary-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.4rem 1.6rem;
+    }
+
+    .summary-label {
+        color: #b5c0d4;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    .summary-value {
+        color: #f4f8ff;
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        margin: 0.35rem 0 0;
+    }
+
 </style>
 
 <div class="page-shell">
@@ -105,6 +127,14 @@
     </nav>
 
     <h2 class="mb-4">Dashboard</h2>
+
+    <div class="content-card dashboard-card summary-card mb-4">
+        <div>
+            <h4 class="mb-0 dashboard-title">Total Laporan</h4>
+            <p class="summary-label">Jumlah seluruh data laporan yang tersimpan saat ini.</p>
+        </div>
+        <p class="summary-value" id="totalReports">0</p>
+    </div>
 
     <div class="row g-4 mb-4">
         <div class="col-12 col-lg-5">
@@ -176,6 +206,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+console.log("Dashboard script loaded");
+
 function getBadgeClass(status) {
     if (status === "REPORTED") return "status-pill status-reported";
     if (status === "VERIFIED") return "status-pill status-verified";
@@ -199,8 +231,14 @@ function renderTableRows(items) {
 }
 
 fetch('/dashboard/data/')
-.then(response => response.json())
+.then(response => {
+    console.log("Fetch response received:", response);
+    return response.json();
+})
 .then(data => {
+    console.log("Data JSON berhasil diterima:", data);
+    document.getElementById('totalReports').textContent = data.total_reports;
+
     const statusLabels = data.status_data.map(item => item.status);
     const statusValues = data.status_data.map(item => item.total);
 
@@ -274,6 +312,9 @@ fetch('/dashboard/data/')
 
     document.getElementById('latestReportedTable').innerHTML = renderTableRows(data.latest_reported);
     document.getElementById('latestResolvedTable').innerHTML = renderTableRows(data.latest_resolved);
+})
+.catch(error => {
+    console.error("Fetch dashboard gagal:", error);
 });
 </script>
 
