@@ -53,6 +53,7 @@ class ReportCreateView(CreateView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
+        form.instance.reporter = self.request.user
         messages.success(self.request, "Laporan berhasil ditambahkan.")
         return super().form_valid(form)
 
