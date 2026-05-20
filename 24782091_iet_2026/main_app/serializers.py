@@ -21,4 +21,16 @@ class ReportSerializer(serializers.ModelSerializer):
         ]
 
     def get_reporter(self, obj):
+        request = self.context.get('request')
+
+        if not obj.reporter:
+            return 'Warga Anonim'
+
+        if not request or not request.user.is_authenticated:
+            return 'Warga Anonim'
+
+        user = request.user
+        if getattr(user, 'is_admin', False) or obj.reporter_id == user.id:
+            return obj.reporter.username
+
         return 'Warga Anonim'
