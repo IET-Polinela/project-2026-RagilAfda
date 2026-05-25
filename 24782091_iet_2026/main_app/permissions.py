@@ -3,28 +3,32 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 class CanAccessDraftReport(BasePermission):
     """
-    Admin dapat mengakses semua laporan.
-    Citizen hanya dapat mengakses laporan berstatus DRAFT miliknya sendiri.
-    Laporan non-DRAFT dapat dibaca oleh user yang sudah login.
-    Perubahan data oleh citizen hanya boleh dilakukan saat status masih DRAFT.
+    Admin hanya dapat melihat laporan non-DRAFT dan hanya boleh mengubah status.
+    Citizen dapat melihat laporan non-DRAFT serta semua laporan miliknya sendiri.
+    Citizen hanya boleh membuat, mengubah, dan menghapus laporan miliknya sendiri.
     """
 
     message = 'Anda tidak memiliki izin untuk mengakses laporan ini.'
 
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated)
+        user = request.user
+        if not user or not user.is_authenticated:
+            return False
+
+        if view.action == 'create':
+            return not getattr(user, 'is_admin', False)
+
+        return True
 
     def has_object_permission(self, request, view, obj):
         user = request.user
-
-        if getattr(user, 'is_admin', False):
-            return True
-
+        is_admin = getattr(user, 'is_admin', False)
         is_owner = obj.reporter_id == user.id
 
         if request.method in SAFE_METHODS:
-            if obj.status == 'DRAFT':
-                return is_owner
-            return True
+            return obj.status != 'DRAFT' or is_owner
 
-        return is_owner and obj.status == 'DRAFT'
+        if is_admin:
+            return view.action in ['update', 'partial_update']
+
+        return is_owner

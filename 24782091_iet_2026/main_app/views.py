@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
@@ -8,15 +9,27 @@ from django.http import JsonResponse
 from .models import Report
 
 
+def get_visible_reports(user):
+    queryset = Report.objects.all().order_by('-created_at')
+
+    if not user.is_authenticated:
+        return Report.objects.none()
+
+    if user.is_admin:
+        return queryset.exclude(status='DRAFT')
+
+    return queryset.filter(Q(reporter=user) | ~Q(status='DRAFT'))
+
+
 def search_report(request):
     query = request.GET.get('q', '')
-
-    reports = Report.objects.filter(title__icontains=query).values()
+    reports = get_visible_reports(request.user).filter(title__icontains=query).values()
 
     return JsonResponse(list(reports), safe=False)
 
+
 def report_detail_api(request, pk):
-    report = get_object_or_404(Report, pk=pk)
+    report = get_object_or_404(get_visible_reports(request.user), pk=pk)
 
     return JsonResponse({
         'title': report.title,
@@ -34,10 +47,16 @@ class ReportListView(ListView):
     template_name = 'main_app/report_list.html'
     context_object_name = 'reports'
 
+    def get_queryset(self):
+        return get_visible_reports(self.request.user)
+
 
 class ReportDetailView(DetailView):
     model = Report
     template_name = 'main_app/report_detail.html'
+
+    def get_queryset(self):
+        return get_visible_reports(self.request.user)
 
 
 class ReportCreateView(CreateView):
@@ -47,13 +66,15 @@ class ReportCreateView(CreateView):
     success_url = reverse_lazy('report_list')
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated or not request.user.is_admin:
-            messages.error(request, "Akses ditolak. Hanya admin.")
+        if not request.user.is_authenticated or request.user.is_admin:
+            messages.error(request, "Akses ditolak. Hanya citizen yang dapat membuat laporan.")
             return redirect('report_list')
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.instance.reporter = self.request.user
+        if not form.instance.status:
+            form.instance.status = 'REPORTED'
         messages.success(self.request, "Laporan berhasil ditambahkan.")
         return super().form_valid(form)
 
@@ -65,9 +86,19 @@ class ReportUpdateView(UpdateView):
     success_url = reverse_lazy('report_list')
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated or not request.user.is_admin:
-            messages.error(request, "Akses ditolak. Hanya admin.")
+        if not request.user.is_authenticated:
+            messages.error(request, "Silakan login terlebih dahulu.")
             return redirect('report_list')
+
+        report = get_object_or_404(Report, pk=kwargs['pk'])
+        if request.user.is_admin:
+            messages.error(request, "Admin hanya dapat mengubah status laporan.")
+            return redirect('report_list')
+
+        if report.reporter_id != request.user.id:
+            messages.error(request, "Anda hanya dapat mengedit laporan milik sendiri.")
+            return redirect('report_list')
+
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -81,9 +112,19 @@ class ReportDeleteView(DeleteView):
     success_url = reverse_lazy('report_list')
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated or not request.user.is_admin:
-            messages.error(request, "Akses ditolak. Hanya admin.")
+        if not request.user.is_authenticated:
+            messages.error(request, "Silakan login terlebih dahulu.")
             return redirect('report_list')
+
+        report = get_object_or_404(Report, pk=kwargs['pk'])
+        if request.user.is_admin:
+            messages.error(request, "Admin tidak dapat menghapus laporan.")
+            return redirect('report_list')
+
+        if report.reporter_id != request.user.id:
+            messages.error(request, "Anda hanya dapat menghapus laporan milik sendiri.")
+            return redirect('report_list')
+
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):

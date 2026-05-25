@@ -67,13 +67,9 @@
         </div>
 
         {% if user.is_authenticated %}
-            {% if user.is_admin %}
+            {% if not user.is_admin %}
                 <a href="{% url 'add_report' %}" class="btn btn-primary">
                     <i class="bi bi-plus-circle-fill"></i>Tambah Laporan
-                </a>
-            {% else %}
-                <a href="{% url 'add_report' %}" class="btn btn-secondary">
-                    <i class="bi bi-lock-fill"></i>Tambah Laporan
                 </a>
             {% endif %}
         {% endif %}
@@ -100,7 +96,9 @@
                     <td>{{ report.title }}</td>
                     <td>{{ report.location }}</td>
                     <td>
-                        {% if report.status == 'REPORTED' %}
+                        {% if report.status == 'DRAFT' %}
+                            <span class="badge bg-dark">Draft</span>
+                        {% elif report.status == 'REPORTED' %}
                             <span class="badge bg-secondary">Reported</span>
                         {% elif report.status == 'VERIFIED' %}
                             <span class="badge bg-primary">Verified</span>
@@ -120,14 +118,7 @@
                             <i class="bi bi-eye-fill"></i>Detail
                         </button>
 
-                        {% if user.is_admin %}
-                            <a href="{% url 'update_report' report.pk %}" class="btn btn-warning btn-sm">
-                                Edit
-                            </a>
-                            <a href="{% url 'delete_report' report.pk %}" class="btn btn-danger btn-sm">
-                                Delete
-                            </a>
-                        {% else %}
+                        {% if not user.is_admin and report.reporter_id == user.id %}
                             <a href="{% url 'update_report' report.pk %}" class="btn btn-secondary btn-sm">
                                 Edit
                             </a>
@@ -176,12 +167,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const updateUrlTemplate = "{% url 'update_report' 0 %}";
     const deleteUrlTemplate = "{% url 'delete_report' 0 %}";
     const isAdmin = {% if user.is_admin %}true{% else %}false{% endif %};
+    const currentUserId = {% if user.is_authenticated %}{{ user.id }}{% else %}null{% endif %};
     const detailModalElement = document.getElementById("detailModal");
     const detailModalBody = document.getElementById("detailModalBody");
     const detailPageLink = document.getElementById("detailPageLink");
     const detailModal = new bootstrap.Modal(detailModalElement);
 
     function getBadge(status) {
+        if (status === "DRAFT") return "bg-dark";
         if (status === "REPORTED") return "bg-secondary";
         if (status === "VERIFIED") return "bg-primary";
         if (status === "IN_PROGRESS") return "bg-warning";
@@ -190,6 +183,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getStatusLabel(status) {
+        if (status === "DRAFT") return "Draft";
         if (status === "REPORTED") return "Reported";
         if (status === "VERIFIED") return "Verified";
         if (status === "IN_PROGRESS") return "In Progress";
@@ -216,16 +210,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const pageUrl = detailPageUrlTemplate.replace("/0/", `/${item.id}/`);
             const updateUrl = updateUrlTemplate.replace("/0/", `/${item.id}/`);
             const deleteUrl = deleteUrlTemplate.replace("/0/", `/${item.id}/`);
-            const actionButtons = isAdmin
+            const canManage = !isAdmin && currentUserId === item.reporter_id;
+            const actionButtons = canManage
                 ? `
-                    <a href="${updateUrl}" class="btn btn-warning btn-sm">
-                        Edit
-                    </a>
-                    <a href="${deleteUrl}" class="btn btn-danger btn-sm">
-                        Delete
-                    </a>
-                `
-                : `
                     <a href="${updateUrl}" class="btn btn-secondary btn-sm">
                         Edit
                     </a>
