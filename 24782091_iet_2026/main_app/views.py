@@ -33,6 +33,7 @@ def report_detail_api(request, pk):
 
     return JsonResponse({
         'title': report.title,
+        'category': report.category,
         'description': report.description,
         'location': report.location,
         'status': report.status

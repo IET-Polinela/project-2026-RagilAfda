@@ -219,7 +219,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     <a href="${deleteUrl}" class="btn btn-secondary btn-sm">
                         Delete
                     </a>
-                `;
+                `
+                : "";
 
             html += `
                 <tr>
@@ -253,13 +254,15 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(res => res.json())
             .then(data => {
                 const badge = getBadge(data.status);
+                const statusLabel = getStatusLabel(data.status);
 
                 detailModalBody.innerHTML = `
                     <div class="mb-3">
                         <h4 class="mb-1 report-detail-title">${data.title}</h4>
                         <p class="mb-0 report-detail-location">${data.location}</p>
                     </div>
-                    <p><span class="badge ${badge}">${data.status}</span></p>
+                    <p class="mb-2"><strong>Kategori:</strong><br>${data.category}</p>
+                    <p><span class="badge ${badge}">${statusLabel}</span></p>
                     <div>
                         <h6 class="report-detail-section-title">Deskripsi</h6>
                         <p class="mb-0 report-detail-description">${data.description}</p>
