@@ -25,7 +25,7 @@ const routes = {
         <div class="row g-4">
             <aside class="col-12 col-lg-3">
                 <div class="card border-0 p-3 shadow-sm sticky-top" style="top: 20px;">
-                    <button class="btn btn-primary btn-lg w-100 fw-bold mb-3">
+                    <button class="btn btn-primary btn-lg w-100 fw-bold mb-3" data-bs-toggle="modal" data-bs-target="#reportModal">
                         <i class="bi bi-plus-circle-fill me-2"></i>Laporan Baru
                     </button>
                     <div class="list-group">
@@ -60,12 +60,7 @@ const routes = {
         </div>
     `,
     "#reports": `
-        <div class="card border-0 shadow-sm p-4">
-            <h4 class="fw-bold mb-3">
-                <i class="bi bi-card-list me-2 text-primary"></i>Daftar Laporan
-            </h4>
-            <p class="text-muted mb-0">Halaman daftar laporan akan dihubungkan ke endpoint API pada tahap berikutnya.</p>
-        </div>
+        ${renderReportsPage()}
     `,
 };
 
@@ -79,6 +74,10 @@ function handleRouting() {
 
     if (hash === "#login") {
         setupLoginForm();
+    }
+
+    if (hash === "#reports") {
+        initializeReportsPage();
     }
 }
 

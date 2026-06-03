@@ -1,3 +1,19 @@
+let allReports = [];
+let currentTab = "my_reports";
+let currentPage = 1;
+let totalPages = 0;
+let editingReportId = null;
+
+const REPORTS_PER_PAGE = 10;
+
+const REPORT_STATUS_META = {
+    DRAFT: { label: "Draft", progress: 20, colorClass: "bg-secondary" },
+    REPORTED: { label: "Reported", progress: 40, colorClass: "bg-primary" },
+    VERIFIED: { label: "Verified", progress: 60, colorClass: "bg-info" },
+    IN_PROGRESS: { label: "In Progress", progress: 80, colorClass: "bg-warning" },
+    RESOLVED: { label: "Resolved", progress: 100, colorClass: "bg-success" },
+};
+
 function renderNavMenu() {
     const navMenus = document.getElementById("nav-menus");
     if (!navMenus) {
@@ -29,4 +45,492 @@ function renderNavMenu() {
             <i class="bi bi-person-circle me-1"></i>Login
         </a>
     `;
+}
+
+function renderReportsPage() {
+    return `
+        <div class="row g-4">
+            <div class="col-12 col-xl-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                            <div>
+                                <h4 class="fw-bold mb-1">Daftar Laporan</h4>
+                                <p class="text-muted mb-0">Data laporan warga dengan pagination dan progress penanganan.</p>
+                            </div>
+                            <div class="btn-group" role="group" aria-label="Filter tab laporan">
+                                <button type="button" class="btn btn-primary" data-report-tab="my_reports">Laporan Saya</button>
+                                <button type="button" class="btn btn-outline-primary" data-report-tab="feed">Feed</button>
+                            </div>
+                        </div>
+                        <div id="listContainer" class="row g-3"></div>
+                        <div id="paginationContainer" class="mt-4"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3">Rekap Status</h5>
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span>Draft</span>
+                            <span class="badge text-bg-secondary" id="draftCount">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span>Diproses</span>
+                            <span class="badge text-bg-warning" id="inProgressCount">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-2">
+                            <span>Selesai</span>
+                            <span class="badge text-bg-success" id="resolvedCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function initializeReportsPage() {
+    bindReportTabEvents();
+    setupReportForm();
+    loadDashboardData();
+}
+
+function bindReportTabEvents() {
+    const tabButtons = document.querySelectorAll("[data-report-tab]");
+    tabButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const nextTab = button.dataset.reportTab || "all";
+            loadDashboardData(nextTab, 1);
+        });
+    });
+}
+
+function updateActiveTabButtons() {
+    const tabButtons = document.querySelectorAll("[data-report-tab]");
+    tabButtons.forEach((button) => {
+        const isActive = button.dataset.reportTab === currentTab;
+        button.className = isActive ? "btn btn-primary" : "btn btn-outline-primary";
+    });
+}
+
+function getStatusMeta(status) {
+    return REPORT_STATUS_META[status] || {
+        label: status || "Unknown",
+        progress: 0,
+        colorClass: "bg-dark",
+    };
+}
+
+function formatDateTime(value) {
+    if (!value) {
+        return "-";
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleString("id-ID", {
+        dateStyle: "medium",
+        timeStyle: "short",
+    });
+}
+
+function getApiErrorMessage(response, fallbackMessage) {
+    if (!response) {
+        return fallbackMessage;
+    }
+
+    const responseData = response.data;
+    if (typeof responseData === "string" && responseData.trim()) {
+        return responseData;
+    }
+
+    if (responseData?.detail) {
+        return responseData.detail;
+    }
+
+    if (typeof responseData === "object" && responseData !== null) {
+        const flattenedMessages = Object.values(responseData)
+            .flat()
+            .filter(Boolean)
+            .join(" ");
+
+        if (flattenedMessages) {
+            return flattenedMessages;
+        }
+    }
+
+    return fallbackMessage;
+}
+
+function renderList() {
+    const listContainer = document.getElementById("listContainer");
+    if (!listContainer) {
+        return;
+    }
+
+    if (!allReports.length) {
+        listContainer.innerHTML = `
+            <div class="col-12 text-center text-muted p-5">
+                <i class="bi bi-inbox fs-1"></i>
+                <p class="mt-3 mb-0">Belum ada data laporan untuk tab ini.</p>
+            </div>
+        `;
+        return;
+    }
+
+    listContainer.innerHTML = allReports
+        .map((report) => {
+            const statusMeta = getStatusMeta(report.status);
+            const showEditButton = report.status === "DRAFT" && report.is_owner;
+            const actionButtons = showEditButton
+                ? `
+                    <button
+                        type="button"
+                        class="btn btn-outline-primary btn-sm"
+                        data-edit-draft-id="${report.id}"
+                    >
+                        <i class="bi bi-pencil-square me-1"></i>Edit Draft
+                    </button>
+                `
+                : "";
+
+            return `
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
+                                <div>
+                                    <h5 class="fw-bold mb-1">${report.title || "Tanpa Judul"}</h5>
+                                    <div class="text-muted small">
+                                        <i class="bi bi-tag-fill me-1"></i>${report.category || "-"}
+                                        <span class="mx-2">|</span>
+                                        <i class="bi bi-geo-alt-fill me-1"></i>${report.location || "-"}
+                                    </div>
+                                </div>
+                                <span class="badge text-bg-light border align-self-start">${statusMeta.label}</span>
+                            </div>
+
+                            <p class="text-muted mb-3">${report.description || "Tidak ada deskripsi."}</p>
+
+                            <div class="d-flex justify-content-between small mb-2">
+                                <span>Progress Penanganan</span>
+                                <span>${statusMeta.progress}%</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div
+                                    class="progress-bar ${statusMeta.colorClass}"
+                                    role="progressbar"
+                                    style="width: ${statusMeta.progress}%"
+                                    aria-valuenow="${statusMeta.progress}"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                ></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3 small text-muted">
+                                <span>Pelapor: ${report.reporter || "Warga Anonim"}</span>
+                                <span>Diperbarui: ${formatDateTime(report.updated_at)}</span>
+                            </div>
+                            ${actionButtons ? `<div class="mt-3">${actionButtons}</div>` : ""}
+                        </div>
+                    </div>
+                </div>
+            `;
+        })
+        .join("");
+
+    bindEditDraftButtons();
+}
+
+function renderPagination() {
+    const paginationContainer = document.getElementById("paginationContainer");
+    if (!paginationContainer) {
+        return;
+    }
+
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = "";
+        return;
+    }
+
+    let paginationHtml = `
+        <nav aria-label="Pagination laporan">
+            <ul class="pagination justify-content-center mb-0">
+    `;
+
+    for (let page = 1; page <= totalPages; page += 1) {
+        paginationHtml += `
+            <li class="page-item ${page === currentPage ? "active" : ""}">
+                <button class="page-link" type="button" data-page="${page}">
+                    ${page}
+                </button>
+            </li>
+        `;
+    }
+
+    paginationHtml += `
+            </ul>
+        </nav>
+    `;
+
+    paginationContainer.innerHTML = paginationHtml;
+
+    const pageButtons = paginationContainer.querySelectorAll("[data-page]");
+    pageButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const selectedPage = Number(button.dataset.page);
+            if (selectedPage !== currentPage) {
+                loadDashboardData(currentTab, selectedPage);
+            }
+        });
+    });
+}
+
+async function loadDashboardData(tab = currentTab, page = currentPage) {
+    currentTab = tab;
+    currentPage = page;
+    updateActiveTabButtons();
+
+    // Menembak API Backend dengan parameter tab dan halaman
+    const response = await requestAPI(`/api/reports/?tab=${tab}&page=${page}`, "GET");
+
+    if (response && response.status === 200) {
+        // ==========================================================
+        // INSTRUKSI 1: Ekstraksi Data Paginasi (Destructuring)
+        // 1. Simpan array data laporan dari 'response.data.results' ke variabel global 'allReports'. Jika kosong/undefined, set sebagai array kosong [].
+        // 2. Ambil total jumlah data keseluruhan dari 'response.data.count' (set default 0).
+        // 3. Hitung variabel 'totalPages' dengan membagi total data dengan 10, lalu bulatkan ke atas menggunakan fungsi Math.ceil().
+        // ==========================================================
+        const { results = [], count = 0 } = response.data || {};
+        allReports = results;
+        totalPages = Math.ceil(count / REPORTS_PER_PAGE);
+
+        // ==========================================================
+        // INSTRUKSI 2: Pemicu Perbaruan UI (Sinkronisasi Antarmuka)
+        // Panggil 2 fungsi ini secara berurutan agar layar langsung diperbarui:
+        // 1. renderList() -> menggambar susunan kartu laporan
+        // 2. renderPagination() -> menggambar ulang tombol halaman di bawah
+        // ==========================================================
+        renderList();
+        renderPagination();
+        loadSummaryStats();
+    } else {
+        // Penanganan jika API gagal ditarik atau server mati
+        const listContainer = document.getElementById("listContainer");
+        const isUnauthorized = response && (response.status === 401 || response.status === 403);
+        if (listContainer) {
+            listContainer.innerHTML = `
+                <div class="col-12 text-center text-muted p-5">
+                    <i class="bi ${isUnauthorized ? "bi-lock-fill" : "bi-exclamation-triangle"} fs-1"></i>
+                    <p class="mt-3 mb-0">
+                        ${isUnauthorized ? "Silakan login di SPA terlebih dahulu agar data laporan bisa dimuat." : "Gagal memuat data laporan."}
+                    </p>
+                </div>
+            `;
+        }
+
+        const paginationContainer = document.getElementById("paginationContainer");
+        if (paginationContainer) {
+            paginationContainer.innerHTML = "";
+        }
+    }
+}
+
+async function loadSummaryStats() {
+    const response = await requestAPI("/api/reports/?tab=my_reports&page_size=1000", "GET");
+    if (!response || response.status !== 200) {
+        const draftCountElement = document.getElementById("draftCount");
+        const inProgressCountElement = document.getElementById("inProgressCount");
+        const resolvedCountElement = document.getElementById("resolvedCount");
+
+        if (draftCountElement) {
+            draftCountElement.textContent = "-";
+        }
+        if (inProgressCountElement) {
+            inProgressCountElement.textContent = "-";
+        }
+        if (resolvedCountElement) {
+            resolvedCountElement.textContent = "-";
+        }
+        return;
+    }
+
+    const reports = response.data?.results || [];
+    const draftCount = reports.filter((report) => report.status === "DRAFT").length;
+    const inProgressCount = reports.filter((report) =>
+        ["REPORTED", "VERIFIED", "IN_PROGRESS"].includes(report.status)
+    ).length;
+    const resolvedCount = reports.filter((report) => report.status === "RESOLVED").length;
+
+    const draftCountElement = document.getElementById("draftCount");
+    const inProgressCountElement = document.getElementById("inProgressCount");
+    const resolvedCountElement = document.getElementById("resolvedCount");
+
+    if (draftCountElement) {
+        draftCountElement.textContent = draftCount;
+    }
+    if (inProgressCountElement) {
+        inProgressCountElement.textContent = inProgressCount;
+    }
+    if (resolvedCountElement) {
+        resolvedCountElement.textContent = resolvedCount;
+    }
+}
+
+function bindEditDraftButtons() {
+    const editButtons = document.querySelectorAll("[data-edit-draft-id]");
+    editButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const reportId = button.dataset.editDraftId;
+            if (reportId) {
+                editDraft(reportId);
+            }
+        });
+    });
+}
+
+function getReportModalInstance() {
+    const modalElement = document.getElementById("reportModal");
+    if (!modalElement) {
+        return null;
+    }
+
+    return bootstrap.Modal.getOrCreateInstance(modalElement);
+}
+
+function fillReportForm(report = {}) {
+    const titleInput = document.getElementById("reportTitle");
+    const categoryInput = document.getElementById("reportCategory");
+    const locationInput = document.getElementById("reportLocation");
+    const descriptionInput = document.getElementById("reportDescription");
+
+    if (titleInput) {
+        titleInput.value = report.title || "";
+    }
+    if (categoryInput) {
+        categoryInput.value = report.category || "";
+    }
+    if (locationInput) {
+        locationInput.value = report.location || "";
+    }
+    if (descriptionInput) {
+        descriptionInput.value = report.description || "";
+    }
+}
+
+function resetReportFormState() {
+    const reportForm = document.getElementById("reportForm");
+    if (reportForm) {
+        reportForm.reset();
+    }
+
+    editingReportId = null;
+
+    const modalTitle = document.getElementById("reportModalLabel");
+    if (modalTitle) {
+        modalTitle.innerHTML = `<i class="bi bi-pencil-square me-2"></i>Buat Laporan Baru`;
+    }
+}
+
+async function editDraft(id) {
+    const response = await requestAPI(`/api/reports/${id}/`, "GET");
+    if (!response || response.status !== 200) {
+        alert("Gagal mengambil data draft.");
+        return;
+    }
+
+    editingReportId = id;
+    fillReportForm(response.data || {});
+
+    const modalTitle = document.getElementById("reportModalLabel");
+    if (modalTitle) {
+        modalTitle.innerHTML = `<i class="bi bi-pencil-square me-2"></i>Edit Draft Laporan`;
+    }
+
+    const modalInstance = getReportModalInstance();
+    if (modalInstance) {
+        modalInstance.show();
+    }
+}
+
+function setupReportForm() {
+    const reportForm = document.getElementById("reportForm");
+    const btnDraft = document.getElementById("btnDraft");
+    const btnSubmit = document.getElementById("btnSubmit");
+    const modalElement = document.getElementById("reportModal");
+
+    if (reportForm && !reportForm.dataset.bound) {
+        reportForm.dataset.bound = "true";
+        reportForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            handleReportSubmit("REPORTED");
+        });
+    }
+
+    if (btnDraft && !btnDraft.dataset.bound) {
+        btnDraft.dataset.bound = "true";
+        btnDraft.addEventListener("click", () => {
+            handleReportSubmit("DRAFT");
+        });
+    }
+
+    if (btnSubmit && !btnSubmit.dataset.bound) {
+        btnSubmit.dataset.bound = "true";
+        btnSubmit.addEventListener("click", () => {
+            handleReportSubmit("REPORTED");
+        });
+    }
+
+    if (modalElement && !modalElement.dataset.bound) {
+        modalElement.dataset.bound = "true";
+        modalElement.addEventListener("hidden.bs.modal", () => {
+            resetReportFormState();
+        });
+    }
+}
+
+async function handleReportSubmit(statusValue) {
+    const reportForm = document.getElementById("reportForm");
+    if (!reportForm) {
+        return;
+    }
+
+    const payload = {
+        title: document.getElementById("reportTitle")?.value.trim() || "",
+        category: document.getElementById("reportCategory")?.value.trim() || "",
+        location: document.getElementById("reportLocation")?.value.trim() || "",
+        description: document.getElementById("reportDescription")?.value.trim() || "",
+        status: statusValue,
+    };
+
+    if (!payload.title || !payload.category || !payload.location || !payload.description) {
+        alert("Semua field laporan wajib diisi sebelum disimpan.");
+        return;
+    }
+
+    const isEditing = editingReportId !== null;
+    const endpoint = isEditing ? `/api/reports/${editingReportId}/` : "/api/reports/";
+    const method = isEditing ? "PUT" : "POST";
+
+    const response = await requestAPI(endpoint, method, payload);
+    console.log("Report submit response:", response);
+
+    if (response && (response.status === 201 || response.status === 200)) {
+        const modalInstance = getReportModalInstance();
+        if (modalInstance) {
+            modalInstance.hide();
+        }
+
+        reportForm.reset();
+        editingReportId = null;
+        loadDashboardData();
+        return;
+    }
+
+    alert(getApiErrorMessage(response, "Gagal menyimpan laporan."));
 }
