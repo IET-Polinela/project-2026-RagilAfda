@@ -1,5 +1,6 @@
 from django.db.models import Q
 from rest_framework import status, viewsets
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -8,12 +9,20 @@ from .permissions import CanAccessDraftReport
 from .serializers import ReportSerializer
 
 
+class ReportPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
 class ReportViewSet(viewsets.ModelViewSet):
     serializer_class = ReportSerializer
+    pagination_class = ReportPagination
 
     def get_queryset(self):
-        queryset = Report.objects.all().order_by('-created_at')
         user = self.request.user
+        tab = self.request.query_params.get('tab')
+        queryset = Report.objects.all().order_by('-updated_at')
 
         if not user.is_authenticated:
             return Report.objects.none()
@@ -21,9 +30,18 @@ class ReportViewSet(viewsets.ModelViewSet):
         if getattr(user, 'is_admin', False):
             if self.action in ['update', 'partial_update']:
                 return queryset
+            if tab == 'my_reports':
+                return queryset.filter(reporter=user)
+            if tab == 'feed':
+                return queryset.filter(~Q(reporter=user) & ~Q(status='DRAFT'))
             return queryset.exclude(status='DRAFT')
 
-        return queryset.filter(Q(reporter=user) | ~Q(status='DRAFT'))
+        if tab == 'my_reports':
+            return queryset.filter(reporter=user)
+        if tab == 'feed':
+            return queryset.filter(~Q(reporter=user) & ~Q(status='DRAFT'))
+
+        return queryset.filter(~Q(status='DRAFT') | Q(status='DRAFT', reporter=user))
 
     def get_permissions(self):
         return [IsAuthenticated(), CanAccessDraftReport()]
