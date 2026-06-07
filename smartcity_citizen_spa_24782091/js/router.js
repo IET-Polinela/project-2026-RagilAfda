@@ -25,7 +25,7 @@ const routes = {
         <div class="row g-4">
             <aside class="col-12 col-lg-3">
                 <div class="card border-0 p-3 shadow-sm sticky-top" style="top: 20px;">
-                    <button class="btn btn-primary btn-lg w-100 fw-bold mb-3" data-bs-toggle="modal" data-bs-target="#reportModal">
+                    <button class="btn btn-primary btn-lg w-100 fw-bold mb-3" data-create-report data-bs-toggle="modal" data-bs-target="#reportModal">
                         <i class="bi bi-plus-circle-fill me-2"></i>Laporan Baru
                     </button>
                     <div class="list-group">
@@ -64,13 +64,26 @@ const routes = {
     `,
 };
 
-function handleRouting() {
+async function handleRouting() {
     const hash = window.location.hash || "#login";
     const appContent = document.getElementById("app-content");
-    const pageContent = routes[hash] || routes["#login"];
+
+    if (isLoggedIn()) {
+        await loadCurrentUser();
+    }
+
+    const pageContent = hash === "#reports"
+        ? renderReportsPage()
+        : (routes[hash] || routes["#login"]);
 
     renderNavMenu();
     appContent.innerHTML = pageContent;
+
+    if (isAdmin()) {
+        document.querySelectorAll("[data-create-report]").forEach((button) => {
+            button.remove();
+        });
+    }
 
     if (hash === "#login") {
         setupLoginForm();

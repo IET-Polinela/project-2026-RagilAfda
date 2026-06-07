@@ -1,9 +1,24 @@
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import RegisterSerializer
+
+
+class CurrentUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response(
+            {
+                'id': user.id,
+                'username': user.username,
+                'is_admin': user.is_admin,
+                'is_member': user.is_member,
+            }
+        )
 
 
 class RegisterView(APIView):

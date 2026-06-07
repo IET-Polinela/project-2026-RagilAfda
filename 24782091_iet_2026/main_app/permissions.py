@@ -26,9 +26,11 @@ class CanAccessDraftReport(BasePermission):
         is_owner = obj.reporter_id == user.id
 
         if request.method in SAFE_METHODS:
+            if is_admin:
+                return obj.status != 'DRAFT'
             return obj.status != 'DRAFT' or is_owner
 
         if is_admin:
             return view.action in ['update', 'partial_update']
 
-        return is_owner
+        return is_owner and view.action in ['update', 'partial_update', 'destroy']

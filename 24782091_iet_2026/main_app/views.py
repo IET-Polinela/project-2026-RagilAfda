@@ -9,6 +9,9 @@ from django.http import JsonResponse
 from .models import Report
 
 
+ADMIN_STATUS_VALUES = {'REPORTED', 'VERIFIED', 'IN_PROGRESS', 'RESOLVED'}
+
+
 def get_visible_reports(user):
     queryset = Report.objects.all().order_by('-created_at')
 
@@ -139,11 +142,15 @@ class ReportUpdateStatusView(View):
             messages.error(request, "Akses ditolak. Hanya admin.")
             return redirect('report_list')
 
-        report = get_object_or_404(Report, pk=pk)
+        report = get_object_or_404(get_visible_reports(request.user), pk=pk)
         new_status = request.POST.get('status')
 
+        if new_status not in ADMIN_STATUS_VALUES:
+            messages.error(request, "Status laporan tidak valid.")
+            return redirect('report_list')
+
         report.status = new_status
-        report.save()
+        report.save(update_fields=['status', 'updated_at'])
 
         messages.success(request, f"Status berhasil diubah menjadi {new_status}.")
         return redirect('report_list')

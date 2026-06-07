@@ -28,18 +28,16 @@ class ReportViewSet(viewsets.ModelViewSet):
             return Report.objects.none()
 
         if getattr(user, 'is_admin', False):
-            if self.action in ['update', 'partial_update']:
-                return queryset
             if tab == 'my_reports':
-                return queryset.filter(reporter=user)
+                return queryset.filter(reporter=user).exclude(status='DRAFT')
             if tab == 'feed':
-                return queryset.filter(~Q(reporter=user) & ~Q(status='DRAFT'))
+                return queryset.exclude(status='DRAFT')
             return queryset.exclude(status='DRAFT')
 
         if tab == 'my_reports':
             return queryset.filter(reporter=user)
         if tab == 'feed':
-            return queryset.filter(~Q(reporter=user) & ~Q(status='DRAFT'))
+            return queryset.exclude(status='DRAFT')
 
         return queryset.filter(~Q(status='DRAFT') | Q(status='DRAFT', reporter=user))
 
