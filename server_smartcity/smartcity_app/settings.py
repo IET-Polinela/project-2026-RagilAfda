@@ -88,9 +88,9 @@ WSGI_APPLICATION = 'smartcity_app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'smartcity_db',
-        'USER': 'postgres',
-        'PASSWORD': 'ragilafda22',
+        'NAME': 'db_mhs08',
+        'USER': 'user_mhs08',
+        'PASSWORD': 'mhs08',
         'HOST': 'localhost',
         'PORT': '5432',
     }
