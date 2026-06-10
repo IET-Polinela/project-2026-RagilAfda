@@ -66,9 +66,39 @@
         font-size: 0.8rem;
         font-weight: 600;
     }
+
+    .admin-status-select {
+        background-color: #313247;
+        border-color: #9b4f68;
+        color: #f7f1f4;
+        color-scheme: dark;
+    }
+
+    .admin-status-select:focus {
+        background-color: #38394f;
+        border-color: #d17b96;
+        color: #ffffff;
+        box-shadow: 0 0 0 0.2rem rgba(209, 123, 150, 0.2);
+    }
+
+    .admin-status-select option {
+        background-color: #313247;
+        color: #f7f1f4;
+    }
 </style>
 
-<div class="page-shell">
+<div
+    class="page-shell"
+    id="reportPage"
+    data-search-url="{% url 'search_report' %}"
+    data-detail-page-url="{% url 'report_detail' 0 %}"
+    data-detail-api-url="{% url 'report_detail_api' 0 %}"
+    data-update-url="{% url 'update_report' 0 %}"
+    data-delete-url="{% url 'delete_report' 0 %}"
+    data-status-update-url="{% url 'update_status' 0 %}"
+    data-csrf-token="{{ csrf_token }}"
+    data-is-admin="{{ user.is_admin|yesno:'true,false' }}"
+    data-current-user-id="{% if user.is_authenticated %}{{ user.id }}{% endif %}">
 
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
@@ -113,7 +143,7 @@
                 <tr>
                     <td>{{ report.title }}</td>
                     <td>{{ report.location }}</td>
-                    <td class="report-action-cell">
+                    <td>
                         {% if report.status == 'DRAFT' %}
                             <span class="badge bg-dark">Draft</span>
                         {% elif report.status == 'REPORTED' %}
@@ -126,7 +156,7 @@
                             <span class="badge bg-success">Resolved</span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td class="report-action-cell">
                         <button
                             type="button"
                             class="btn btn-info btn-sm detail-btn"
@@ -143,7 +173,7 @@
                                 class="admin-status-form">
                                 {% csrf_token %}
                                 <span class="admin-status-label">Ubah Status</span>
-                                <select name="status" class="form-select form-select-sm" aria-label="Status laporan">
+                                <select name="status" class="form-select form-select-sm admin-status-select" aria-label="Status laporan">
                                     <option value="REPORTED" {% if report.status == 'REPORTED' %}selected{% endif %}>Reported</option>
                                     <option value="VERIFIED" {% if report.status == 'VERIFIED' %}selected{% endif %}>Verified</option>
                                     <option value="IN_PROGRESS" {% if report.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
@@ -194,17 +224,20 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    const reportPage = document.getElementById("reportPage");
     const searchInput = document.getElementById("searchInput");
     const tableBody = document.getElementById("tableBody");
-    const searchUrl = "{% url 'search_report' %}";
-    const detailPageUrlTemplate = "{% url 'report_detail' 0 %}";
-    const detailApiUrlTemplate = "{% url 'report_detail_api' 0 %}";
-    const updateUrlTemplate = "{% url 'update_report' 0 %}";
-    const deleteUrlTemplate = "{% url 'delete_report' 0 %}";
-    const statusUpdateUrlTemplate = "{% url 'update_status' 0 %}";
-    const csrfToken = "{{ csrf_token }}";
-    const isAdmin = {% if user.is_admin %}true{% else %}false{% endif %};
-    const currentUserId = {% if user.is_authenticated %}{{ user.id }}{% else %}null{% endif %};
+    const searchUrl = reportPage.dataset.searchUrl;
+    const detailPageUrlTemplate = reportPage.dataset.detailPageUrl;
+    const detailApiUrlTemplate = reportPage.dataset.detailApiUrl;
+    const updateUrlTemplate = reportPage.dataset.updateUrl;
+    const deleteUrlTemplate = reportPage.dataset.deleteUrl;
+    const statusUpdateUrlTemplate = reportPage.dataset.statusUpdateUrl;
+    const csrfToken = reportPage.dataset.csrfToken;
+    const isAdmin = reportPage.dataset.isAdmin === "true";
+    const currentUserId = reportPage.dataset.currentUserId
+        ? Number(reportPage.dataset.currentUserId)
+        : null;
     const detailModalElement = document.getElementById("detailModal");
     const detailModalBody = document.getElementById("detailModalBody");
     const detailPageLink = document.getElementById("detailPageLink");
@@ -284,7 +317,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         class="admin-status-form">
                         <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
                         <span class="admin-status-label">Ubah Status</span>
-                        <select name="status" class="form-select form-select-sm" aria-label="Status laporan">
+                        <select name="status" class="form-select form-select-sm admin-status-select" aria-label="Status laporan">
                             ${getStatusOptions(item.status)}
                         </select>
                         <button type="submit" class="btn btn-primary btn-sm text-nowrap">
