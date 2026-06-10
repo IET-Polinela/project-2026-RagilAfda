@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-#78r1)72!ncfppwnb15fgx_d#moe#-+6_6q%!+ulonh6@x2au%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 CORS_ALLOW_ALL_ORIGINS = True
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
@@ -147,4 +147,5 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:5500',
     'http://localhost:5500',
     'http://103.151.63.88:8008',
+    'https://iet-polinela.github.io',
 ]
