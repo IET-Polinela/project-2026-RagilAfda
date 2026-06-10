@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+
+{% block title %}Daftar Laporan{% endblock %}
+
+{% block content %}
+<style>
+    .report-detail-modal .modal-content {
+        background: linear-gradient(180deg, rgba(38, 47, 68, 0.98), rgba(30, 38, 56, 0.98));
+        color: #e7edf7;
+        border: 1px solid rgba(138, 154, 180, 0.18);
+        border-radius: 18px;
+        box-shadow: 0 20px 40px rgba(3, 7, 18, 0.35);
+    }
+
+    .report-detail-modal .modal-header,
+    .report-detail-modal .modal-footer {
+        border-color: rgba(138, 154, 180, 0.14);
+    }
+
+    .report-detail-modal .modal-title {
+        color: #f2f6fc;
+        font-weight: 700;
+    }
+
+    .report-detail-modal .btn-close {
+        filter: invert(1) grayscale(100%);
+        opacity: 0.8;
+    }
+
+    .report-detail-modal .btn-close:hover {
+        opacity: 1;
+    }
+
+    .report-detail-title {
+        color: #f4f7fc;
+    }
+
+    .report-detail-location {
+        color: #b6c2d6;
+    }
+
+    .report-detail-section-title {
+        color: #dbe4f2;
+        font-weight: 600;
+    }
+
+    .report-detail-description {
+        color: #c6d1e1;
+        line-height: 1.65;
+    }
+
+    .report-action-cell {
+        min-width: 220px;
+    }
+
+    .admin-status-form {
+        display: grid;
+        grid-template-columns: minmax(120px, 1fr) auto;
+        gap: 0.5rem;
+        margin-top: 0.6rem;
+    }
+
+    .admin-status-label {
+        grid-column: 1 / -1;
+        color: #c6d1e1;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+</style>
+
+<div class="page-shell">
+
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Reports</li>
+      </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="section-title mb-2">Daftar Laporan</h2>
+            <p class="section-subtitle mb-0">Kelola dan pantau laporan kota.</p>
+        </div>
+
+        {% if user.is_authenticated %}
+            {% if not user.is_admin %}
+                <a href="{% url 'add_report' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle-fill"></i>Tambah Laporan
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Cari laporan...">
+    </div>
+
+    <div class="list-panel">
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Judul</th>
+                    <th>Lokasi</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            {% if reports %}
+            {% for report in reports %}
+                <tr>
+                    <td>{{ report.title }}</td>
+                    <td>{{ report.location }}</td>
+                    <td class="report-action-cell">
+                        {% if report.status == 'DRAFT' %}
+                            <span class="badge bg-dark">Draft</span>
+                        {% elif report.status == 'REPORTED' %}
+                            <span class="badge bg-secondary">Reported</span>
+                        {% elif report.status == 'VERIFIED' %}
+                            <span class="badge bg-primary">Verified</span>
+                        {% elif report.status == 'IN_PROGRESS' %}
+                            <span class="badge bg-warning">In Progress</span>
+                        {% elif report.status == 'RESOLVED' %}
+                            <span class="badge bg-success">Resolved</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button
+                            type="button"
+                            class="btn btn-info btn-sm detail-btn"
+                            data-id="{{ report.pk }}"
+                            data-detail-url="{% url 'report_detail_api' report.pk %}"
+                            data-page-url="{% url 'report_detail' report.pk %}">
+                            <i class="bi bi-eye-fill"></i>Detail
+                        </button>
+
+                        {% if user.is_admin %}
+                            <form
+                                method="post"
+                                action="{% url 'update_status' report.pk %}"
+                                class="admin-status-form">
+                                {% csrf_token %}
+                                <span class="admin-status-label">Ubah Status</span>
+                                <select name="status" class="form-select form-select-sm" aria-label="Status laporan">
+                                    <option value="REPORTED" {% if report.status == 'REPORTED' %}selected{% endif %}>Reported</option>
+                                    <option value="VERIFIED" {% if report.status == 'VERIFIED' %}selected{% endif %}>Verified</option>
+                                    <option value="IN_PROGRESS" {% if report.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                                    <option value="RESOLVED" {% if report.status == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm text-nowrap">
+                                    Simpan
+                                </button>
+                            </form>
+                        {% elif report.reporter_id == user.id %}
+                            <a href="{% url 'update_report' report.pk %}" class="btn btn-secondary btn-sm">
+                                Edit
+                            </a>
+                            <a href="{% url 'delete_report' report.pk %}" class="btn btn-secondary btn-sm">
+                                Delete
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4" class="text-center">Belum ada laporan</td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade report-detail-modal" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailModalLabel">Detail Laporan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="detailModalBody">
+        <p class="text-muted mb-0">Memuat data laporan...</p>
+      </div>
+      <div class="modal-footer">
+        <a href="#" id="detailPageLink" class="btn btn-outline-primary">Buka Halaman Detail</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("searchInput");
+    const tableBody = document.getElementById("tableBody");
+    const searchUrl = "{% url 'search_report' %}";
+    const detailPageUrlTemplate = "{% url 'report_detail' 0 %}";
+    const detailApiUrlTemplate = "{% url 'report_detail_api' 0 %}";
+    const updateUrlTemplate = "{% url 'update_report' 0 %}";
+    const deleteUrlTemplate = "{% url 'delete_report' 0 %}";
+    const statusUpdateUrlTemplate = "{% url 'update_status' 0 %}";
+    const csrfToken = "{{ csrf_token }}";
+    const isAdmin = {% if user.is_admin %}true{% else %}false{% endif %};
+    const currentUserId = {% if user.is_authenticated %}{{ user.id }}{% else %}null{% endif %};
+    const detailModalElement = document.getElementById("detailModal");
+    const detailModalBody = document.getElementById("detailModalBody");
+    const detailPageLink = document.getElementById("detailPageLink");
+    const detailModal = new bootstrap.Modal(detailModalElement);
+
+    function getBadge(status) {
+        if (status === "DRAFT") return "bg-dark";
+        if (status === "REPORTED") return "bg-secondary";
+        if (status === "VERIFIED") return "bg-primary";
+        if (status === "IN_PROGRESS") return "bg-warning";
+        if (status === "RESOLVED") return "bg-success";
+        return "bg-dark";
+    }
+
+    function getStatusLabel(status) {
+        if (status === "DRAFT") return "Draft";
+        if (status === "REPORTED") return "Reported";
+        if (status === "VERIFIED") return "Verified";
+        if (status === "IN_PROGRESS") return "In Progress";
+        if (status === "RESOLVED") return "Resolved";
+        return status;
+    }
+
+    function getStatusOptions(selectedStatus) {
+        const statuses = [
+            ["REPORTED", "Reported"],
+            ["VERIFIED", "Verified"],
+            ["IN_PROGRESS", "In Progress"],
+            ["RESOLVED", "Resolved"],
+        ];
+
+        return statuses
+            .map(([value, label]) => `
+                <option value="${value}" ${value === selectedStatus ? "selected" : ""}>
+                    ${label}
+                </option>
+            `)
+            .join("");
+    }
+
+    function renderRows(data) {
+        if (!data.length) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center">Data tidak ditemukan</td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = "";
+
+        data.forEach(item => {
+            const badge = getBadge(item.status);
+            const statusLabel = getStatusLabel(item.status);
+            const detailUrl = detailApiUrlTemplate.replace("/0/", `/${item.id}/`);
+            const pageUrl = detailPageUrlTemplate.replace("/0/", `/${item.id}/`);
+            const updateUrl = updateUrlTemplate.replace("/0/", `/${item.id}/`);
+            const deleteUrl = deleteUrlTemplate.replace("/0/", `/${item.id}/`);
+            const statusUpdateUrl = statusUpdateUrlTemplate.replace("/0/", `/${item.id}/`);
+            const canManage = !isAdmin && currentUserId === item.reporter_id;
+            const citizenActions = canManage
+                ? `
+                    <a href="${updateUrl}" class="btn btn-secondary btn-sm">
+                        Edit
+                    </a>
+                    <a href="${deleteUrl}" class="btn btn-secondary btn-sm">
+                        Delete
+                    </a>
+                `
+                : "";
+            const adminStatusForm = isAdmin
+                ? `
+                    <form
+                        method="post"
+                        action="${statusUpdateUrl}"
+                        class="admin-status-form">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                        <span class="admin-status-label">Ubah Status</span>
+                        <select name="status" class="form-select form-select-sm" aria-label="Status laporan">
+                            ${getStatusOptions(item.status)}
+                        </select>
+                        <button type="submit" class="btn btn-primary btn-sm text-nowrap">
+                            Simpan
+                        </button>
+                    </form>
+                `
+                : "";
+
+            html += `
+                <tr>
+                    <td>${item.title}</td>
+                    <td>${item.location}</td>
+                    <td><span class="badge ${badge}">${statusLabel}</span></td>
+                    <td class="report-action-cell">
+                        <button
+                            type="button"
+                            class="btn btn-info btn-sm detail-btn"
+                            data-id="${item.id}"
+                            data-detail-url="${detailUrl}"
+                            data-page-url="${pageUrl}">
+                            <i class="bi bi-eye-fill"></i>Detail
+                        </button>
+                        ${adminStatusForm}
+                        ${citizenActions}
+                    </td>
+                </tr>
+            `;
+        });
+
+        tableBody.innerHTML = html;
+    }
+
+    function openDetailModal(detailUrl, pageUrl) {
+        detailModalBody.innerHTML = '<p class="text-muted mb-0">Memuat data laporan...</p>';
+        detailPageLink.href = pageUrl;
+        detailModal.show();
+
+        fetch(detailUrl)
+            .then(res => res.json())
+            .then(data => {
+                const badge = getBadge(data.status);
+                const statusLabel = getStatusLabel(data.status);
+
+                detailModalBody.innerHTML = `
+                    <div class="mb-3">
+                        <h4 class="mb-1 report-detail-title">${data.title}</h4>
+                        <p class="mb-0 report-detail-location">${data.location}</p>
+                    </div>
+                    <p class="mb-2"><strong>Kategori:</strong><br>${data.category}</p>
+                    <p><span class="badge ${badge}">${statusLabel}</span></p>
+                    <div>
+                        <h6 class="report-detail-section-title">Deskripsi</h6>
+                        <p class="mb-0 report-detail-description">${data.description}</p>
+                    </div>
+                `;
+            })
+            .catch(() => {
+                detailModalBody.innerHTML = '<p class="text-danger mb-0">Detail laporan gagal dimuat.</p>';
+            });
+    }
+
+    searchInput.addEventListener("keyup", function () {
+        fetch(`${searchUrl}?q=${encodeURIComponent(this.value)}`)
+            .then(res => res.json())
+            .then(renderRows);
+    });
+
+    tableBody.addEventListener("click", function (event) {
+        const detailButton = event.target.closest(".detail-btn");
+        if (!detailButton) {
+            return;
+        }
+
+        openDetailModal(
+            detailButton.dataset.detailUrl,
+            detailButton.dataset.pageUrl
+        );
+    });
+});
+</script>
+
+{% endblock %}
