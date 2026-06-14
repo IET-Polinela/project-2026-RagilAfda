@@ -42,9 +42,14 @@ function renderNavMenu() {
     }
 
     navMenus.innerHTML = `
-        <a href="#login" class="btn btn-outline-light btn-sm">
-            <i class="bi bi-person-circle me-1"></i>Login
-        </a>
+        <div class="d-flex align-items-center gap-2">
+            <a href="#login" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-person-circle me-1"></i>Login
+            </a>
+            <a href="#register" class="btn btn-light btn-sm">
+                <i class="bi bi-person-plus-fill me-1"></i>Daftar
+            </a>
+        </div>
     `;
 }
 

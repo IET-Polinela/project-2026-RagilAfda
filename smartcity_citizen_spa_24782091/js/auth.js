@@ -50,6 +50,38 @@ function setupLoginForm() {
     });
 }
 
+function setupRegisterForm() {
+    const registerForm = document.getElementById("registerForm");
+    if (!registerForm) {
+        return;
+    }
+
+    registerForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const username = document.getElementById("registerUsername").value.trim();
+        const email = document.getElementById("registerEmail").value.trim();
+        const password = document.getElementById("registerPassword").value;
+        const password2 = document.getElementById("registerPasswordConfirm").value;
+
+        const result = await requestAPI("/api/register/", "POST", {
+            username,
+            email,
+            password,
+            password2,
+        });
+
+        if (result.status === 201) {
+            alert("Registrasi berhasil. Silakan login dengan akun baru Anda.");
+            registerForm.reset();
+            window.location.hash = "#login";
+            return;
+        }
+
+        alert(getApiErrorMessage(result, "Registrasi gagal. Periksa data yang Anda isi."));
+    });
+}
+
 function logout() {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");

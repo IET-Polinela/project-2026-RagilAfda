@@ -17,6 +17,47 @@ const routes = {
                             <i class="bi bi-box-arrow-in-right me-2"></i>Masuk
                         </button>
                     </form>
+                    <p class="text-center text-muted small mt-4 mb-0">
+                        Belum punya akun?
+                        <a href="#register" class="text-decoration-none fw-semibold">Daftar di sini</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    `,
+    "#register": `
+        <div class="row justify-content-center mt-5">
+            <div class="col-12 col-md-7 col-lg-5">
+                <div class="card border-0 shadow-sm p-4">
+                    <h4 class="text-center fw-bold mb-2">Daftar Warga</h4>
+                    <p class="text-center text-muted mb-4">
+                        Buat akun citizen untuk mengirim dan memantau laporan.
+                    </p>
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label for="registerUsername" class="form-label">Username</label>
+                            <input type="text" id="registerUsername" class="form-control" placeholder="Pilih username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerEmail" class="form-label">Email</label>
+                            <input type="email" id="registerEmail" class="form-control" placeholder="nama@email.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerPassword" class="form-label">Password</label>
+                            <input type="password" id="registerPassword" class="form-control" placeholder="Minimal 8 karakter" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerPasswordConfirm" class="form-label">Konfirmasi Password</label>
+                            <input type="password" id="registerPasswordConfirm" class="form-control" placeholder="Ulangi password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">
+                            <i class="bi bi-person-plus-fill me-2"></i>Buat Akun
+                        </button>
+                    </form>
+                    <p class="text-center text-muted small mt-4 mb-0">
+                        Sudah punya akun?
+                        <a href="#login" class="text-decoration-none fw-semibold">Masuk sekarang</a>
+                    </p>
                 </div>
             </div>
         </div>
@@ -65,7 +106,7 @@ const routes = {
 };
 
 async function handleRouting() {
-    const hash = window.location.hash || "#login";
+    const hash = window.location.hash || (isLoggedIn() ? "#dashboard" : "#login");
     const appContent = document.getElementById("app-content");
 
     if (isLoggedIn()) {
@@ -86,7 +127,21 @@ async function handleRouting() {
     }
 
     if (hash === "#login") {
+        if (isLoggedIn()) {
+            window.location.hash = "#dashboard";
+            return;
+        }
+
         setupLoginForm();
+    }
+
+    if (hash === "#register") {
+        if (isLoggedIn()) {
+            window.location.hash = "#dashboard";
+            return;
+        }
+
+        setupRegisterForm();
     }
 
     if (hash === "#reports") {
