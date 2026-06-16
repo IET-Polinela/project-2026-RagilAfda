@@ -1,5 +1,6 @@
-from django.db.models import Q
+from django.db.models import Count, Q
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -85,3 +86,26 @@ class ReportViewSet(viewsets.ModelViewSet):
         if admin_response is not None:
             return admin_response
         return super().partial_update(request, *args, **kwargs)
+
+    @action(detail=False, methods=['get'], url_path='summary')
+    def summary(self, request):
+        summary_map = {
+            'DRAFT': 0,
+            'REPORTED': 0,
+            'VERIFIED': 0,
+            'IN_PROGRESS': 0,
+            'RESOLVED': 0,
+        }
+
+        summary_rows = (
+            self.get_queryset()
+            .values('status')
+            .annotate(total=Count('id'))
+        )
+
+        for row in summary_rows:
+            status_key = row.get('status')
+            if status_key in summary_map:
+                summary_map[status_key] = row.get('total', 0)
+
+        return Response(summary_map)

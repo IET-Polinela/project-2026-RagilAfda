@@ -407,7 +407,7 @@ async function loadDashboardData(tab = currentTab, page = currentPage) {
 }
 
 async function loadSummaryStats(tab = currentTab) {
-    const response = await requestAPI(`/api/reports/?tab=${tab}&page_size=100`, "GET");
+    const response = await requestAPI(`/api/reports/summary/?tab=${tab}`, "GET");
     if (!response || response.status !== 200) {
         ["draftCount", "reportedCount", "verifiedCount", "inProgressCount", "resolvedCount"]
             .forEach((elementId) => {
@@ -419,7 +419,6 @@ async function loadSummaryStats(tab = currentTab) {
         return;
     }
 
-    const reports = response.data?.results || [];
     const statusCountElements = {
         DRAFT: "draftCount",
         REPORTED: "reportedCount",
@@ -431,9 +430,7 @@ async function loadSummaryStats(tab = currentTab) {
     Object.entries(statusCountElements).forEach(([status, elementId]) => {
         const countElement = document.getElementById(elementId);
         if (countElement) {
-            countElement.textContent = reports.filter(
-                (report) => report.status === status
-            ).length;
+            countElement.textContent = response.data?.[status] ?? 0;
         }
     });
 }
