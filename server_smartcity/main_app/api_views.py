@@ -1,4 +1,5 @@
 from django.db.models import Q
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -43,6 +44,10 @@ class ReportViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         return [IsAuthenticated(), CanAccessDraftReport()]
+
+    @extend_schema(exclude=True)
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(reporter=self.request.user)
