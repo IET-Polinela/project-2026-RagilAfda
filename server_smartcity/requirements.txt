@@ -7,6 +7,8 @@ Django==6.0.3
 django-cors-headers==4.9.0
 djangorestframework==3.17.1
 djangorestframework_simplejwt==5.5.1
+drf-spectacular
+Django-scalar
 dnspython==2.7.0
 Faker==40.15.0
 flake8==7.1.2
