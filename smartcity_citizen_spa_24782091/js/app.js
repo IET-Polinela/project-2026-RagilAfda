@@ -4,6 +4,7 @@ let currentPage = 1;
 let totalPages = 0;
 let editingReportId = null;
 let editingReportStatus = null;
+let summaryRequestToken = 0;
 
 const REPORTS_PER_PAGE = 10;
 
@@ -57,11 +58,9 @@ function renderReportsPage() {
     const defaultTab = isAdmin() ? "feed" : "my_reports";
     const citizenTabs = `
         <button type="button" class="btn btn-primary" data-report-tab="my_reports">Laporan Saya</button>
-        <button type="button" class="btn btn-outline-primary" data-report-tab="feed">Feed</button>
+        <button type="button" class="btn btn-outline-primary" data-report-tab="feed">Feed Kota</button>
     `;
-    const adminTabs = `
-        <button type="button" class="btn btn-primary" data-report-tab="feed">Semua Laporan</button>
-    `;
+    const adminTabs = citizenTabs;
 
     return `
         <div class="row g-4">
@@ -407,8 +406,15 @@ async function loadDashboardData(tab = currentTab, page = currentPage) {
 }
 
 async function loadSummaryStats(tab = currentTab) {
-    const response = await requestAPI(`/api/reports/summary/?tab=${tab}`, "GET");
+    const activeRequestToken = summaryRequestToken + 1;
+    summaryRequestToken = activeRequestToken;
+    const pageSize = 100;
+    const response = await requestAPI(`/api/reports/?tab=${tab}&page=1&page_size=${pageSize}`, "GET");
     if (!response || response.status !== 200) {
+        if (activeRequestToken !== summaryRequestToken) {
+            return;
+        }
+
         ["draftCount", "reportedCount", "verifiedCount", "inProgressCount", "resolvedCount"]
             .forEach((elementId) => {
                 const countElement = document.getElementById(elementId);
@@ -416,6 +422,35 @@ async function loadSummaryStats(tab = currentTab) {
                     countElement.textContent = "-";
                 }
             });
+        return;
+    }
+
+    const { count = 0, results: firstPageReports = [] } = response.data || {};
+    const reports = [...firstPageReports];
+    const totalSummaryPages = Math.ceil(count / pageSize);
+    const remainingPagePromises = [];
+
+    for (let page = 2; page <= totalSummaryPages; page += 1) {
+        remainingPagePromises.push(
+            requestAPI(`/api/reports/?tab=${tab}&page=${page}&page_size=${pageSize}`, "GET")
+        );
+    }
+
+    if (remainingPagePromises.length) {
+        const remainingResponses = await Promise.all(remainingPagePromises);
+
+        if (activeRequestToken !== summaryRequestToken) {
+            return;
+        }
+
+        remainingResponses.forEach((nextPageResponse) => {
+            if (nextPageResponse && nextPageResponse.status === 200) {
+                reports.push(...(nextPageResponse.data?.results || []));
+            }
+        });
+    }
+
+    if (activeRequestToken !== summaryRequestToken) {
         return;
     }
 
@@ -430,7 +465,9 @@ async function loadSummaryStats(tab = currentTab) {
     Object.entries(statusCountElements).forEach(([status, elementId]) => {
         const countElement = document.getElementById(elementId);
         if (countElement) {
-            countElement.textContent = response.data?.[status] ?? 0;
+            countElement.textContent = reports.filter(
+                (report) => report.status === status
+            ).length;
         }
     });
 }
