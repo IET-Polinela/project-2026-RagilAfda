@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://103.151.63.88:8008";
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 async function requestAPI(endpoint, method = "GET", bodyData = null) {
     const accessToken = localStorage.getItem("access_token");
@@ -24,6 +24,11 @@ async function requestAPI(endpoint, method = "GET", bodyData = null) {
     const responseData = contentType.includes("application/json")
         ? await response.json()
         : await response.text();
+
+    if (response.status === 401) {
+        localStorage.clear();
+        window.location.hash = "#login";
+    }
 
     return {
         ok: response.ok,

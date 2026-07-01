@@ -109,6 +109,11 @@ async function handleRouting() {
     const hash = window.location.hash || (isLoggedIn() ? "#dashboard" : "#login");
     const appContent = document.getElementById("app-content");
 
+    if (!isLoggedIn() && ["#dashboard", "#reports"].includes(hash)) {
+        window.location.hash = "#login";
+        return;
+    }
+
     if (isLoggedIn()) {
         await loadCurrentUser();
     }
@@ -142,6 +147,10 @@ async function handleRouting() {
         }
 
         setupRegisterForm();
+    }
+
+    if (hash === "#dashboard") {
+        setupReportForm();
     }
 
     if (hash === "#reports") {

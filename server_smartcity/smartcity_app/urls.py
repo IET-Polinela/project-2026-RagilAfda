@@ -20,9 +20,11 @@ from django_scalar.views import scalar_viewer
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from usermanagement_24782091.api_views import CurrentUserView, RegisterView
+from usermanagement_24782091.views import CustomLoginView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('login/', CustomLoginView.as_view(), name='login'),
     path('api/register/', RegisterView.as_view(), name='api_register'),
     path('api/me/', CurrentUserView.as_view(), name='api_current_user'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

@@ -174,12 +174,13 @@
                                 {% csrf_token %}
                                 <span class="admin-status-label">Ubah Status</span>
                                 <select name="status" class="form-select form-select-sm admin-status-select" aria-label="Status laporan">
-                                    <option value="REPORTED" {% if report.status == 'REPORTED' %}selected{% endif %}>Reported</option>
-                                    <option value="VERIFIED" {% if report.status == 'VERIFIED' %}selected{% endif %}>Verified</option>
-                                    <option value="IN_PROGRESS" {% if report.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
-                                    <option value="RESOLVED" {% if report.status == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                                    {% for transition in report.allowed_status_transitions %}
+                                        <option value="{{ transition.value }}">{{ transition.label }}</option>
+                                    {% empty %}
+                                        <option value="{{ report.status }}" selected>{{ report.status }}</option>
+                                    {% endfor %}
                                 </select>
-                                <button type="submit" class="btn btn-primary btn-sm text-nowrap">
+                                <button type="submit" class="btn btn-primary btn-sm text-nowrap" {% if not report.allowed_status_transitions %}disabled{% endif %}>
                                     Simpan
                                 </button>
                             </form>

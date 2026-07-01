@@ -30,7 +30,14 @@ class CanAccessDraftReport(BasePermission):
                 return obj.status != 'DRAFT'
             return obj.status != 'DRAFT' or is_owner
 
+        if obj.status == 'RESOLVED':
+            return False
+
         if is_admin:
             return view.action in ['update', 'partial_update']
 
-        return is_owner and view.action in ['update', 'partial_update', 'destroy']
+        return (
+            is_owner
+            and obj.status == 'DRAFT'
+            and view.action in ['update', 'partial_update', 'destroy']
+        )

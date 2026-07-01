@@ -25,6 +25,18 @@
                 <h5 class="mb-3">Informasi Laporan</h5>
                 <p><strong>Lokasi:</strong><br>{{ object.location }}</p>
                 <p class="mb-4"><strong>Status:</strong><br>{{ object.status }}</p>
+                {% if user.is_admin and allowed_status_transitions %}
+                    <form method="post" action="{% url 'update_status' object.pk %}" class="mb-3">
+                        {% csrf_token %}
+                        <label for="newStatus" class="form-label">Ubah Status</label>
+                        <select id="newStatus" name="new_status" class="form-select mb-2">
+                            {% for transition in allowed_status_transitions %}
+                                <option value="{{ transition.value }}">{{ transition.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </form>
+                {% endif %}
                 <a href="{% url 'report_list' %}" class="btn btn-secondary"><i class="bi bi-arrow-left-circle-fill"></i>Kembali</a>
             </div>
         </div>

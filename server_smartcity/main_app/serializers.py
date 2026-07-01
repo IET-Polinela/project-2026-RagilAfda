@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Report
+from main_app.models import Report
 
 
 PUBLIC_STATUS_VALUES = {'REPORTED', 'VERIFIED', 'IN_PROGRESS', 'RESOLVED'}
@@ -9,6 +9,7 @@ CITIZEN_CREATE_STATUS_VALUES = {'DRAFT', 'REPORTED'}
 
 class ReportSerializer(serializers.ModelSerializer):
     reporter = serializers.SerializerMethodField()
+    reporter_name = serializers.SerializerMethodField()
     is_owner = serializers.SerializerMethodField()
     can_edit = serializers.SerializerMethodField()
     can_delete = serializers.SerializerMethodField()
@@ -23,6 +24,7 @@ class ReportSerializer(serializers.ModelSerializer):
             'description',
             'location',
             'reporter',
+            'reporter_name',
             'is_owner',
             'can_edit',
             'can_delete',
@@ -34,6 +36,9 @@ class ReportSerializer(serializers.ModelSerializer):
         read_only_fields = ['reporter', 'created_at', 'updated_at']
 
     def get_reporter(self, obj):
+        return 'Warga Anonim'
+
+    def get_reporter_name(self, obj):
         request = self.context.get('request')
 
         if not obj.reporter:
@@ -74,6 +79,7 @@ class ReportSerializer(serializers.ModelSerializer):
             and request.user.is_authenticated
             and not getattr(request.user, 'is_admin', False)
             and obj.reporter_id == request.user.id
+            and obj.status == 'DRAFT'
         )
 
     def get_can_delete(self, obj):

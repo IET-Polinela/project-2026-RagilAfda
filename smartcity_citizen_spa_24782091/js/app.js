@@ -707,6 +707,7 @@ async function handleReportSubmit(statusValue) {
 
         reportForm.reset();
         editingReportId = null;
+        alert(`Laporan berhasil disimpan sebagai ${statusValue}`);
         loadDashboardData();
         return;
     }

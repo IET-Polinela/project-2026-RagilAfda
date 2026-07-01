@@ -21,5 +21,6 @@ urlpatterns = [
     path('delete/<int:pk>/', ReportDeleteView.as_view(), name='delete_report'),
     path('update-status/<int:pk>/', ReportUpdateStatusView.as_view(), name='update_status'),
     path('search/', search_report, name='search_report'),
+    path('report-search/', search_report, name='report_search'),
     path('detail/<int:pk>/', report_detail_api, name='report_detail_api'),
 ]

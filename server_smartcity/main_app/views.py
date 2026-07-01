@@ -1,15 +1,56 @@
 from django.contrib import messages
 from django.db.models import Q
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
-from django.http import JsonResponse
 
 from .models import Report
 
 
 ADMIN_STATUS_VALUES = {'REPORTED', 'VERIFIED', 'IN_PROGRESS', 'RESOLVED'}
+ALLOWED_STATUS_TRANSITIONS = {
+    'REPORTED': ('VERIFIED',),
+    'VERIFIED': ('IN_PROGRESS',),
+    'IN_PROGRESS': ('RESOLVED',),
+    'RESOLVED': (),
+}
+STATUS_LABELS = {
+    'REPORTED': 'Reported',
+    'VERIFIED': 'Verified',
+    'IN_PROGRESS': 'In Progress',
+    'RESOLVED': 'Resolved',
+}
+
+
+def is_admin_user(user):
+    return bool(
+        user
+        and user.is_authenticated
+        and (
+            getattr(user, 'is_admin', False)
+            or getattr(user, 'is_staff', False)
+            or getattr(user, 'is_superuser', False)
+        )
+    )
+
+
+class AdminOnlyMixin:
+    def dispatch(self, request, *args, **kwargs):
+        if not is_admin_user(request.user):
+            messages.error(request, "Akses ditolak. Hanya admin.")
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+
+
+def attach_allowed_transitions(reports):
+    for report in reports:
+        report.allowed_status_transitions = [
+            {'value': status, 'label': STATUS_LABELS[status]}
+            for status in ALLOWED_STATUS_TRANSITIONS.get(report.status, set())
+        ]
+    return reports
 
 
 def get_visible_reports(user):
@@ -25,6 +66,9 @@ def get_visible_reports(user):
 
 
 def search_report(request):
+    if not is_admin_user(request.user):
+        return HttpResponseForbidden()
+
     query = request.GET.get('q', '')
     reports = get_visible_reports(request.user).filter(title__icontains=query).values()
 
@@ -32,7 +76,9 @@ def search_report(request):
 
 
 def report_detail_api(request, pk):
-    report = get_object_or_404(get_visible_reports(request.user), pk=pk)
+    user = getattr(request, 'user', None)
+    queryset = get_visible_reports(user) if user else Report.objects.all()
+    report = get_object_or_404(queryset, pk=pk)
 
     return JsonResponse({
         'title': report.title,
@@ -46,108 +92,87 @@ def home(request):
     return render(request, 'main_app/home.html')
 
 
-class ReportListView(ListView):
+class ReportListView(AdminOnlyMixin, ListView):
     model = Report
     template_name = 'main_app/report_list.html'
     context_object_name = 'reports'
 
     def get_queryset(self):
-        return get_visible_reports(self.request.user)
+        return attach_allowed_transitions(list(get_visible_reports(self.request.user)))
 
 
-class ReportDetailView(DetailView):
+class ReportDetailView(AdminOnlyMixin, DetailView):
     model = Report
     template_name = 'main_app/report_detail.html'
 
     def get_queryset(self):
         return get_visible_reports(self.request.user)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['allowed_status_transitions'] = [
+            {'value': status, 'label': STATUS_LABELS[status]}
+            for status in ALLOWED_STATUS_TRANSITIONS.get(self.object.status, set())
+        ]
+        return context
 
-class ReportCreateView(CreateView):
+
+class ReportCreateView(AdminOnlyMixin, CreateView):
     model = Report
-    fields = ['title', 'category', 'description', 'location']
+    fields = ['title', 'category', 'description', 'location', 'status']
     template_name = 'main_app/add_report.html'
     success_url = reverse_lazy('report_list')
 
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated or request.user.is_admin:
-            messages.error(request, "Akses ditolak. Hanya citizen yang dapat membuat laporan.")
-            return redirect('report_list')
-        return super().dispatch(request, *args, **kwargs)
-
     def form_valid(self, form):
-        form.instance.reporter = self.request.user
+        if not form.instance.reporter_id:
+            form.instance.reporter = self.request.user
         if not form.instance.status:
             form.instance.status = 'REPORTED'
         messages.success(self.request, "Laporan berhasil ditambahkan.")
         return super().form_valid(form)
 
 
-class ReportUpdateView(UpdateView):
+class ReportUpdateView(AdminOnlyMixin, UpdateView):
     model = Report
-    fields = ['title', 'category', 'description', 'location']
+    fields = ['title', 'category', 'description', 'location', 'status']
     template_name = 'main_app/add_report.html'
     success_url = reverse_lazy('report_list')
-
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            messages.error(request, "Silakan login terlebih dahulu.")
-            return redirect('report_list')
-
-        report = get_object_or_404(Report, pk=kwargs['pk'])
-        if request.user.is_admin:
-            messages.error(request, "Admin hanya dapat mengubah status laporan.")
-            return redirect('report_list')
-
-        if report.reporter_id != request.user.id:
-            messages.error(request, "Anda hanya dapat mengedit laporan milik sendiri.")
-            return redirect('report_list')
-
-        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         messages.success(self.request, "Laporan berhasil diupdate.")
         return super().form_valid(form)
 
 
-class ReportDeleteView(DeleteView):
+class ReportDeleteView(AdminOnlyMixin, DeleteView):
     model = Report
     template_name = 'main_app/confirm_delete.html'
     success_url = reverse_lazy('report_list')
-
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            messages.error(request, "Silakan login terlebih dahulu.")
-            return redirect('report_list')
-
-        report = get_object_or_404(Report, pk=kwargs['pk'])
-        if request.user.is_admin:
-            messages.error(request, "Admin tidak dapat menghapus laporan.")
-            return redirect('report_list')
-
-        if report.reporter_id != request.user.id:
-            messages.error(request, "Anda hanya dapat menghapus laporan milik sendiri.")
-            return redirect('report_list')
-
-        return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         messages.success(self.request, "Laporan berhasil dihapus.")
         return super().post(request, *args, **kwargs)
 
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, "Laporan berhasil dihapus.")
+        return super().delete(request, *args, **kwargs)
+
 
 class ReportUpdateStatusView(View):
     def post(self, request, pk):
-        if not request.user.is_authenticated or not request.user.is_admin:
+        if not is_admin_user(request.user):
             messages.error(request, "Akses ditolak. Hanya admin.")
             return redirect('report_list')
 
         report = get_object_or_404(get_visible_reports(request.user), pk=pk)
-        new_status = request.POST.get('status')
+        new_status = request.POST.get('new_status') or request.POST.get('status')
 
         if new_status not in ADMIN_STATUS_VALUES:
             messages.error(request, "Status laporan tidak valid.")
             return redirect('report_list')
+
+        if new_status not in ALLOWED_STATUS_TRANSITIONS.get(report.status, set()):
+            messages.error(request, "Transisi status laporan tidak valid.")
+            return redirect('report_detail', pk=pk)
 
         report.status = new_status
         report.save(update_fields=['status', 'updated_at'])
