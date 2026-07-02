@@ -1,4 +1,7 @@
+import builtins
+
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -8,6 +11,8 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from .models import Report
 
+
+builtins.PermissionDenied = PermissionDenied
 
 ADMIN_STATUS_VALUES = {'REPORTED', 'VERIFIED', 'IN_PROGRESS', 'RESOLVED'}
 ALLOWED_STATUS_TRANSITIONS = {
@@ -138,6 +143,11 @@ class ReportUpdateView(AdminOnlyMixin, UpdateView):
     template_name = 'main_app/add_report.html'
     success_url = reverse_lazy('report_list')
 
+    def dispatch(self, request, *args, **kwargs):
+        if is_admin_user(request.user):
+            raise PermissionDenied("Admin hanya dapat mengubah status laporan.")
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
         messages.success(self.request, "Laporan berhasil diupdate.")
         return super().form_valid(form)
@@ -148,11 +158,18 @@ class ReportDeleteView(AdminOnlyMixin, DeleteView):
     template_name = 'main_app/confirm_delete.html'
     success_url = reverse_lazy('report_list')
 
+    def dispatch(self, request, *args, **kwargs):
+        if is_admin_user(request.user):
+            raise PermissionDenied("Admin tidak dapat menghapus laporan.")
+        return super().dispatch(request, *args, **kwargs)
+
     def post(self, request, *args, **kwargs):
         messages.success(self.request, "Laporan berhasil dihapus.")
         return super().post(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
+        if is_admin_user(request.user):
+            raise PermissionDenied("Admin tidak dapat menghapus laporan.")
         messages.success(self.request, "Laporan berhasil dihapus.")
         return super().delete(request, *args, **kwargs)
 
