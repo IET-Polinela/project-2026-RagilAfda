@@ -58,7 +58,7 @@ const { test, expect } = require('@playwright/test');
 //     mungkin diblokir oleh kebijakan CORS browser. Disarankan menggunakan
 //     http-server atau Live Server extension.
 // ---------------------------------------------------------------------------
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = 'http://103.151.63.88:8008';
 
 // Path ke file SPA relatif terhadap folder server_smartcity
 // Gunakan salah satu opsi di bawah ini sesuai environment Anda:
@@ -222,7 +222,7 @@ async function clearAuthTokens(page) {
  * @param {import('@playwright/test').Page} page - Objek halaman Playwright
  */
 async function mockSPAApiUrl(page) {
-    const BASE_URL = 'http://localhost:8000';
+    const BASE_URL = 'http://103.151.63.88:8008';
 
     // Gunakan wildcard **/api/** untuk menangkap dari host/domain mana saja
     await page.route('**/api/**', async (route) => {
