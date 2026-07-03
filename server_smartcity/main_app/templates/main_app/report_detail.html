@@ -34,7 +34,7 @@
                                 <option value="{{ choice.value }}" {% if choice.selected %}selected{% endif %}>{{ choice.label }}</option>
                             {% endfor %}
                         </select>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
+                        <button type="submit" class="btn btn-primary" {% if not allowed_status_transitions %}disabled{% endif %}>Simpan</button>
                     </form>
                 {% endif %}
                 <a href="{% url 'report_list' %}" class="btn btn-secondary"><i class="bi bi-arrow-left-circle-fill"></i>Kembali</a>
