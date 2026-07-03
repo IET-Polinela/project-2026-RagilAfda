@@ -180,7 +180,7 @@
                                         <option value="{{ report.status }}" selected>{{ report.status }}</option>
                                     {% endfor %}
                                 </select>
-                                <button type="submit" class="btn btn-primary btn-sm text-nowrap" {% if not report.allowed_status_transitions %}disabled{% endif %}>
+                                <button type="submit" class="btn btn-primary btn-sm text-nowrap">
                                     Simpan
                                 </button>
                             </form>
@@ -262,20 +262,8 @@ document.addEventListener("DOMContentLoaded", function () {
         return status;
     }
 
-    function getNextStatuses(status) {
-        const transitions = {
-            REPORTED: ["VERIFIED"],
-            VERIFIED: ["IN_PROGRESS"],
-            IN_PROGRESS: ["RESOLVED"],
-            RESOLVED: [],
-        };
-
-        return transitions[status] || [];
-    }
-
     function getStatusOptions(selectedStatus) {
-        const choices = [selectedStatus, ...getNextStatuses(selectedStatus)]
-            .filter((status, index, statuses) => status && statuses.indexOf(status) === index);
+        const choices = ["REPORTED", "VERIFIED", "IN_PROGRESS", "RESOLVED"];
 
         return choices
             .map(status => `
@@ -328,7 +316,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <select name="status" class="form-select form-select-sm admin-status-select" aria-label="Status laporan">
                             ${getStatusOptions(item.status)}
                         </select>
-                        <button type="submit" class="btn btn-primary btn-sm text-nowrap" ${getNextStatuses(item.status).length ? "" : "disabled"}>
+                        <button type="submit" class="btn btn-primary btn-sm text-nowrap">
                             Simpan
                         </button>
                     </form>

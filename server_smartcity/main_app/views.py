@@ -64,24 +64,14 @@ def get_allowed_status_transitions(status):
 
 
 def get_admin_status_choices(status):
-    choices = []
-    if status in STATUS_LABELS:
-        choices.append({
-            'value': status,
-            'label': STATUS_LABELS[status],
-            'selected': True,
-        })
-
-    choices.extend(
+    return [
         {
-            'value': transition['value'],
-            'label': transition['label'],
-            'selected': False,
+            'value': value,
+            'label': STATUS_LABELS[value],
+            'selected': value == status,
         }
-        for transition in get_allowed_status_transitions(status)
-        if transition['value'] != status
-    )
-    return choices
+        for value in ('REPORTED', 'VERIFIED', 'IN_PROGRESS', 'RESOLVED')
+    ]
 
 
 def get_visible_reports(user):
@@ -214,10 +204,6 @@ class ReportUpdateStatusView(View):
         if new_status == report.status:
             messages.info(request, "Status laporan tidak berubah.")
             return redirect('report_list')
-
-        if new_status not in ALLOWED_STATUS_TRANSITIONS.get(report.status, set()):
-            messages.error(request, "Transisi status laporan tidak valid.")
-            return redirect('report_detail', pk=pk)
 
         report.status = new_status
         report.save(update_fields=['status', 'updated_at'])

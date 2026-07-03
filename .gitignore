@@ -1,0 +1,6 @@
+__pycache__
+smartcity_citizen_spa_24782091/node_modules/
+smartcity_citizen_spa_24782091/test-results/
+smartcity_citizen_spa_24782091/playwright-report/
+server_smartcity/.coverage
+server_smartcity/test.sqlite3
