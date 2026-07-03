@@ -174,8 +174,8 @@
                                 {% csrf_token %}
                                 <span class="admin-status-label">Ubah Status</span>
                                 <select name="status" class="form-select form-select-sm admin-status-select" aria-label="Status laporan">
-                                    {% for transition in report.allowed_status_transitions %}
-                                        <option value="{{ transition.value }}">{{ transition.label }}</option>
+                                    {% for choice in report.admin_status_choices %}
+                                        <option value="{{ choice.value }}" {% if choice.selected %}selected{% endif %}>{{ choice.label }}</option>
                                     {% empty %}
                                         <option value="{{ report.status }}" selected>{{ report.status }}</option>
                                     {% endfor %}
@@ -262,18 +262,25 @@ document.addEventListener("DOMContentLoaded", function () {
         return status;
     }
 
-    function getStatusOptions(selectedStatus) {
-        const statuses = [
-            ["REPORTED", "Reported"],
-            ["VERIFIED", "Verified"],
-            ["IN_PROGRESS", "In Progress"],
-            ["RESOLVED", "Resolved"],
-        ];
+    function getNextStatuses(status) {
+        const transitions = {
+            REPORTED: ["VERIFIED"],
+            VERIFIED: ["IN_PROGRESS"],
+            IN_PROGRESS: ["RESOLVED"],
+            RESOLVED: [],
+        };
 
-        return statuses
-            .map(([value, label]) => `
-                <option value="${value}" ${value === selectedStatus ? "selected" : ""}>
-                    ${label}
+        return transitions[status] || [];
+    }
+
+    function getStatusOptions(selectedStatus) {
+        const choices = [selectedStatus, ...getNextStatuses(selectedStatus)]
+            .filter((status, index, statuses) => status && statuses.indexOf(status) === index);
+
+        return choices
+            .map(status => `
+                <option value="${status}" ${status === selectedStatus ? "selected" : ""}>
+                    ${getStatusLabel(status)}
                 </option>
             `)
             .join("");
@@ -321,7 +328,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <select name="status" class="form-select form-select-sm admin-status-select" aria-label="Status laporan">
                             ${getStatusOptions(item.status)}
                         </select>
-                        <button type="submit" class="btn btn-primary btn-sm text-nowrap">
+                        <button type="submit" class="btn btn-primary btn-sm text-nowrap" ${getNextStatuses(item.status).length ? "" : "disabled"}>
                             Simpan
                         </button>
                     </form>

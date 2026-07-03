@@ -51,11 +51,37 @@ class AdminOnlyMixin:
 
 def attach_allowed_transitions(reports):
     for report in reports:
-        report.allowed_status_transitions = [
-            {'value': status, 'label': STATUS_LABELS[status]}
-            for status in ALLOWED_STATUS_TRANSITIONS.get(report.status, set())
-        ]
+        report.allowed_status_transitions = get_allowed_status_transitions(report.status)
+        report.admin_status_choices = get_admin_status_choices(report.status)
     return reports
+
+
+def get_allowed_status_transitions(status):
+    return [
+        {'value': next_status, 'label': STATUS_LABELS[next_status]}
+        for next_status in ALLOWED_STATUS_TRANSITIONS.get(status, set())
+    ]
+
+
+def get_admin_status_choices(status):
+    choices = []
+    if status in STATUS_LABELS:
+        choices.append({
+            'value': status,
+            'label': STATUS_LABELS[status],
+            'selected': True,
+        })
+
+    choices.extend(
+        {
+            'value': transition['value'],
+            'label': transition['label'],
+            'selected': False,
+        }
+        for transition in get_allowed_status_transitions(status)
+        if transition['value'] != status
+    )
+    return choices
 
 
 def get_visible_reports(user):
@@ -115,10 +141,8 @@ class ReportDetailView(AdminOnlyMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['allowed_status_transitions'] = [
-            {'value': status, 'label': STATUS_LABELS[status]}
-            for status in ALLOWED_STATUS_TRANSITIONS.get(self.object.status, set())
-        ]
+        context['allowed_status_transitions'] = get_allowed_status_transitions(self.object.status)
+        context['admin_status_choices'] = get_admin_status_choices(self.object.status)
         return context
 
 
@@ -185,6 +209,10 @@ class ReportUpdateStatusView(View):
 
         if new_status not in ADMIN_STATUS_VALUES:
             messages.error(request, "Status laporan tidak valid.")
+            return redirect('report_list')
+
+        if new_status == report.status:
+            messages.info(request, "Status laporan tidak berubah.")
             return redirect('report_list')
 
         if new_status not in ALLOWED_STATUS_TRANSITIONS.get(report.status, set()):
