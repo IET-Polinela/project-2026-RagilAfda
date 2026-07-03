@@ -15,6 +15,7 @@ from .models import Report
 builtins.PermissionDenied = PermissionDenied
 
 ADMIN_STATUS_VALUES = {'REPORTED', 'VERIFIED', 'IN_PROGRESS', 'RESOLVED'}
+ADMIN_REPORT_LIST_LIMIT = 100
 ALLOWED_STATUS_TRANSITIONS = {
     'REPORTED': ('VERIFIED',),
     'VERIFIED': ('IN_PROGRESS',),
@@ -101,7 +102,7 @@ def search_report(request):
         return HttpResponseForbidden()
 
     query = request.GET.get('q', '')
-    reports = get_visible_reports(request.user).filter(title__icontains=query).values()
+    reports = get_visible_reports(request.user).filter(title__icontains=query).values()[:ADMIN_REPORT_LIST_LIMIT]
 
     return JsonResponse(list(reports), safe=False)
 
@@ -129,7 +130,8 @@ class ReportListView(AdminOnlyMixin, ListView):
     context_object_name = 'reports'
 
     def get_queryset(self):
-        return attach_allowed_transitions(list(get_visible_reports(self.request.user)))
+        reports = get_visible_reports(self.request.user)[:ADMIN_REPORT_LIST_LIMIT]
+        return attach_allowed_transitions(list(reports))
 
 
 class ReportDetailView(AdminOnlyMixin, DetailView):
